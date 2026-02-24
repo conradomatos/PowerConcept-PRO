@@ -64,6 +64,7 @@ import AgentEditor from "./pages/ai-lab/AgentEditor";
 import AILabTemplates from "./pages/ai-lab/AILabTemplates";
 import AILabSettings from "./pages/ai-lab/AILabSettings";
 import AILabPlaceholder from "./pages/ai-lab/AILabPlaceholder";
+import FrotasDashboard from "./pages/frotas/FrotasDashboard";
 
 const queryClient = new QueryClient();
 
@@ -137,6 +138,9 @@ const App = () => (
               <Route path="resumo" element={<ResumoPrecos />} />
               <Route path="documentos" element={<Documentos />} />
             </Route>
+            {/* Frotas routes */}
+            <Route path="/frotas" element={<FrotasDashboard />} />
+            {/* Mais rotas de frotas serão adicionadas aqui */}
             {/* AI Lab routes */}
             <Route path="/ai-lab" element={<AILabDashboard />} />
             <Route path="/ai-lab/chat/:threadId" element={<AILabChat />} />

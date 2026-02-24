@@ -18,6 +18,7 @@ import {
   Layers,
   HardHat,
   Truck,
+  Fuel,
   Wrench,
   Cog,
   PencilRuler,
@@ -110,6 +111,18 @@ const areaNavItems: Record<NavigationArea, AreaConfig> = {
       { title: 'Categorias', url: '/financeiro/categorias', icon: Tags },
       { title: 'DRE', url: '/financeiro/dre', icon: BarChart3 },
       { title: 'Mapeamento Omie', url: '/financeiro/mapeamento-categorias', icon: ArrowLeftRight },
+    ],
+  },
+  frotas: {
+    label: 'Gestão de Frotas',
+    items: [
+      { title: 'Dashboard Frotas', url: '/frotas', icon: LayoutDashboard },
+      { title: 'Veículos', url: '/frotas/veiculos', icon: Truck },
+      { title: 'KM Rodado', url: '/frotas/km', icon: GanttChart },
+      { title: 'Abastecimentos', url: '/frotas/abastecimentos', icon: Fuel },
+      { title: 'Manutenção', url: '/frotas/manutencao', icon: Wrench },
+      { title: 'Custos', url: '/frotas/custos', icon: DollarSign },
+      { title: 'Relatórios', url: '/frotas/relatorios', icon: BarChart3 },
     ],
   },
   orcamentos: {

@@ -12,6 +12,7 @@ import {
   Calculator,
   Wallet,
   Brain,
+  Truck,
 } from 'lucide-react';
 import logoCps from '@/assets/logo-cps.png';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,7 @@ import {
 } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 
-export type NavigationArea = 'recursos' | 'projetos' | 'relatorios' | 'orcamentos' | 'financeiro' | 'home' | 'ailab';
+export type NavigationArea = 'recursos' | 'projetos' | 'relatorios' | 'orcamentos' | 'financeiro' | 'frotas' | 'home' | 'ailab';
 
 interface LayoutProps {
   children: ReactNode;
@@ -59,6 +60,14 @@ const routeToArea: Record<string, NavigationArea> = {
   // Orçamentos
   '/orcamentos': 'orcamentos',
   '/orcamentos/bases': 'orcamentos',
+  // Frotas
+  '/frotas': 'frotas',
+  '/frotas/veiculos': 'frotas',
+  '/frotas/km': 'frotas',
+  '/frotas/abastecimentos': 'frotas',
+  '/frotas/manutencao': 'frotas',
+  '/frotas/custos': 'frotas',
+  '/frotas/relatorios': 'frotas',
   '/ai-lab': 'ailab',
 };
 
@@ -103,6 +112,7 @@ export default function Layout({ children }: LayoutProps) {
       orcamentos: '/orcamentos',
       relatorios: '/dashboard',
       financeiro: '/financeiro/conciliacao',
+      frotas: '/frotas',
       ailab: '/ai-lab',
     };
     navigate(firstRoutes[area]);
@@ -115,6 +125,7 @@ export default function Layout({ children }: LayoutProps) {
     { id: 'orcamentos' as NavigationArea, label: 'Orçamentos', icon: Calculator },
     { id: 'relatorios' as NavigationArea, label: 'Relatórios', icon: BarChart3 },
     { id: 'financeiro' as NavigationArea, label: 'Financeiro', icon: Wallet },
+    { id: 'frotas' as NavigationArea, label: 'Frotas', icon: Truck },
     { id: 'ailab' as NavigationArea, label: 'AI Lab', icon: Brain },
   ];
 
