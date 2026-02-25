@@ -25,10 +25,8 @@ import { CurrencyInput } from '@/components/ui/currency-input';
 import { Label } from '@/components/ui/label';
 import {
   FileBarChart,
-  Fuel,
   Wrench,
   DollarSign,
-  Car,
   TrendingUp,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -256,7 +254,6 @@ function TabKmPorProjeto() {
   }, [rows, precoKm]);
 
   const hasPrecoKm = precoKm > 0;
-  const colCount = hasPrecoKm ? 8 : 6;
 
   return (
     <div className="space-y-4">
