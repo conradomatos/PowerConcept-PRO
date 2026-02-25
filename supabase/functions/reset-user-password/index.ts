@@ -11,39 +11,38 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
-
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!
 
-    // Verify caller is admin
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } }
-    })
-    const { data: { user: caller } } = await userClient.auth.getUser()
-    if (!caller) {
-      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
-        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    const authHeader = req.headers.get('Authorization')
+    
+    // Check if caller is admin (via JWT) or using service key header
+    const serviceKeyHeader = req.headers.get('x-service-key')
+    let isAuthorized = false
+
+    if (serviceKeyHeader === serviceRoleKey) {
+      isAuthorized = true
+    } else if (authHeader) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } }
       })
+      const { data: { user: caller } } = await userClient.auth.getUser()
+      if (caller) {
+        const { data: callerRoles } = await userClient
+          .from('user_roles').select('role').eq('user_id', caller.id)
+        isAuthorized = callerRoles?.some(r => r.role === 'admin' || r.role === 'super_admin') ?? false
+      }
     }
 
-    const { data: callerRoles } = await userClient
-      .from('user_roles').select('role').eq('user_id', caller.id)
-    const isAdmin = callerRoles?.some(r => r.role === 'admin' || r.role === 'super_admin')
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: 'Apenas administradores' }), {
+    if (!isAuthorized) {
+      return new Response(JSON.stringify({ error: 'Não autorizado' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
     const { userId, newPassword } = await req.json()
-    if (!userId || !newPassword || newPassword.length < 8) {
+    if (!userId || !newPassword || newPassword.length < 6) {
       return new Response(JSON.stringify({ error: 'Dados inválidos' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
