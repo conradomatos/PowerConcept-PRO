@@ -69,7 +69,10 @@ export function parseOmie(rows: any[][]): { lancamentos: LancamentoOmie[], saldo
         if (cn.includes('SITUAÇ') || cn === 'SITUACAO') colMap['situacao'] = j;
         else if (cn === 'DATA' || cn.includes('DATA LANÇ') || cn.includes('DATA LANC')) colMap['data'] = j;
         // RAZÃO SOCIAL deve vir ANTES de CLIENTE para não ser engolido pelo else-if
+        // CNPJ/CPF deve vir ANTES de CLIENTE — col 19 contém ambos
+        else if (cn.includes('CNPJ') || cn.includes('CPF')) colMap['cnpjCpf'] = j;
         else if (cn.includes('RAZÃO') || cn.includes('RAZAO') || cn.includes('RAZÃ')) colMap['razaoSocial'] = j;
+        else if (cn.includes('OBSERV')) colMap['observacoes'] = j;
         else if (cn.includes('CLIENTE') || cn.includes('FORNECEDOR')) colMap['cliente'] = j;
         else if (cn.includes('CONTA CORRENTE') || cn === 'CONTA') colMap['conta'] = j;
         else if (cn.includes('CATEGORIA')) colMap['categoria'] = j;
@@ -81,8 +84,6 @@ export function parseOmie(rows: any[][]): { lancamentos: LancamentoOmie[], saldo
         else if (cn.includes('PARCELA')) colMap['parcela'] = j;
         else if (cn.includes('ORIGEM')) colMap['origem'] = j;
         else if (cn.includes('PROJETO')) colMap['projeto'] = j;
-        else if (cn.includes('CNPJ') || cn.includes('CPF')) colMap['cnpjCpf'] = j;
-        else if (cn.includes('OBSERV')) colMap['observacoes'] = j;
       }
       // Log de validação dos mapeamentos
       console.log('[Parser Omie] Header detectado na linha', headerRowIdx, '- Mapeamento:', JSON.stringify(colMap));
