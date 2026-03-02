@@ -1,6 +1,7 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import {
   LogOut,
@@ -75,6 +76,7 @@ export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut, roles, hasRole } = useAuth();
+  const { canModule, loading: permLoading } = usePermissions();
   
   // Determine active area based on current route
   const getAreaFromPath = (path: string): NavigationArea => {
@@ -118,18 +120,22 @@ export default function Layout({ children }: LayoutProps) {
     navigate(firstRoutes[area]);
   };
 
-  // Top navigation areas
-  const topNavAreas = [
-    { id: 'recursos' as NavigationArea, label: 'Recursos', icon: Users },
-    { id: 'projetos' as NavigationArea, label: 'Projetos', icon: FolderKanban },
-    { id: 'orcamentos' as NavigationArea, label: 'Orçamentos', icon: Calculator },
-    { id: 'relatorios' as NavigationArea, label: 'Relatórios', icon: BarChart3 },
-    { id: 'financeiro' as NavigationArea, label: 'Financeiro', icon: Wallet },
-    { id: 'frotas' as NavigationArea, label: 'Frotas', icon: Truck },
-    { id: 'ailab' as NavigationArea, label: 'AI Lab', icon: Brain },
+  // Mapa completo de áreas com seus módulos RBAC
+  const allNavAreas = [
+    { id: 'recursos' as NavigationArea, label: 'Recursos', icon: Users, moduleCode: 'recursos' },
+    { id: 'projetos' as NavigationArea, label: 'Projetos', icon: FolderKanban, moduleCode: 'projetos' },
+    { id: 'orcamentos' as NavigationArea, label: 'Orçamentos', icon: Calculator, moduleCode: 'orcamentos' },
+    { id: 'relatorios' as NavigationArea, label: 'Relatórios', icon: BarChart3, moduleCode: 'relatorios' },
+    { id: 'financeiro' as NavigationArea, label: 'Financeiro', icon: Wallet, moduleCode: 'financeiro' },
+    { id: 'frotas' as NavigationArea, label: 'Frotas', icon: Truck, moduleCode: 'frotas' },
+    { id: 'ailab' as NavigationArea, label: 'AI Lab', icon: Brain, moduleCode: 'ailab' },
   ];
 
-  const canAccessSettings = hasRole('admin') || hasRole('super_admin');
+  // Filtra apenas módulos que o usuário pode ver
+  const topNavAreas = allNavAreas.filter(area => canModule(area.moduleCode));
+
+  // Manter canAccessSettings existente + check RBAC
+  const canAccessSettings = hasRole('admin') || hasRole('super_admin') || canModule('admin');
 
   return (
     <SidebarProvider>

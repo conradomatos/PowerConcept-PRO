@@ -56,6 +56,7 @@ import CatalogoEquipamentos from "./pages/orcamentos/bases/CatalogoEquipamentos"
 import IncidenciasMO from "./pages/orcamentos/bases/IncidenciasMO";
 import CatalogoImpostos from "./pages/orcamentos/bases/CatalogoImpostos";
 import CatalogoMarkup from "./pages/orcamentos/bases/CatalogoMarkup";
+import SemAcesso from "./pages/SemAcesso";
 import NotFound from "./pages/NotFound";
 import AILabDashboard from "./pages/ai-lab/AILabDashboard";
 import AILabChat from "./pages/ai-lab/AILabChat";
@@ -163,6 +164,7 @@ const App = () => (
             <Route path="/ai-lab/analytics" element={<AILabPlaceholder page="analytics" />} />
             <Route path="/ai-lab/logs" element={<AILabPlaceholder page="logs" />} />
             <Route path="/ai-lab/settings" element={<AILabSettings />} />
+            <Route path="/sem-acesso" element={<SemAcesso />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
