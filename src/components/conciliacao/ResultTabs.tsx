@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import DataTable, { type ColumnDef, ValueCell, formatDateBR } from './DataTable';
-import type { ResultadoConciliacao, Match, Divergencia, LancamentoBanco, LancamentoOmie } from '@/lib/conciliacao/types';
+import type { ResultadoConciliacao, Match, Divergencia, LancamentoBanco, LancamentoOmie } from '@/calculations/conciliacao/types';
 
 interface ResultTabsProps {
   resultado: ResultadoConciliacao;

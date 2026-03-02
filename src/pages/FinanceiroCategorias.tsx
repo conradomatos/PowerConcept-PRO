@@ -9,10 +9,10 @@ import {
   getCategoriaUsageCount,
   transferirLancamentos,
   gerarTemplateXlsx,
-} from '@/lib/conciliacao/categorias';
-import type { ImportPreview } from '@/lib/conciliacao/categorias';
-import type { CategoriaGrupo, CategoriaItem, CategoriasStorage } from '@/lib/conciliacao/types';
-import { CONTAS_DRE } from '@/lib/conciliacao/types';
+} from '@/calculations/conciliacao/categorias';
+import type { ImportPreview } from '@/calculations/conciliacao/categorias';
+import type { CategoriaGrupo, CategoriaItem, CategoriasStorage } from '@/calculations/conciliacao/types';
+import { CONTAS_DRE } from '@/calculations/conciliacao/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

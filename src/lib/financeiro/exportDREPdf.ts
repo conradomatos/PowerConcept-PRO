@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import type { DREAnual, DRERelatorio } from '@/lib/conciliacao/types';
+import type { DREAnual, DRERelatorio } from '@/calculations/conciliacao/types';
 
 const MESES_ABREV = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 

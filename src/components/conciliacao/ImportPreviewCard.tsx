@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Upload, X, ChevronDown, ChevronUp, CheckCircle2, Database } from 'lucide-react';
 import DataTable, { type ColumnDef, ValueCell, formatDateBR } from './DataTable';
-import type { LancamentoBanco, LancamentoOmie, TransacaoCartao } from '@/lib/conciliacao/types';
+import type { LancamentoBanco, LancamentoOmie, TransacaoCartao } from '@/calculations/conciliacao/types';
 
 interface ImportPreviewCardProps {
   type: 'banco' | 'omie' | 'cartao';

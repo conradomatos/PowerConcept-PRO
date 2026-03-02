@@ -22,11 +22,11 @@ import {
   ChevronRight,
   Search,
 } from 'lucide-react';
-import { parseCartaoFromText, csvToText, workbookToRows } from '@/lib/conciliacao/parsers';
-import { suggestCategoria } from '@/lib/conciliacao/categorias';
-import { gerarExcelImportacaoCartao } from '@/lib/conciliacao/outputs';
+import { parseCartaoFromText, csvToText, workbookToRows } from '@/calculations/conciliacao/parsers';
+import { suggestCategoria } from '@/calculations/conciliacao/categorias';
+import { gerarExcelImportacaoCartao } from '@/calculations/conciliacao/outputs';
 import { useConciliacaoStorage, rehydrateCartao } from '@/hooks/useConciliacaoStorage';
-import type { TransacaoCartao, CartaoInfo, ResultadoConciliacao } from '@/lib/conciliacao/types';
+import type { TransacaoCartao, CartaoInfo, ResultadoConciliacao } from '@/calculations/conciliacao/types';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];

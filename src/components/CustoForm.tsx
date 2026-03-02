@@ -21,7 +21,7 @@ import {
   formatCurrency,
   formatCurrencyInput,
   parseCurrencyToNumber 
-} from '@/lib/custos';
+} from '@/calculations/custos-pessoal';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CustoFormProps {

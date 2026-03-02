@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import Layout from '@/components/Layout';
 import { useMapeamentos, useBatchUpdateMapeamento, useMapeamentoStats, suggestContaDRE } from '@/hooks/useCategoriaMapeamento';
 import { useCategoriasAtivas } from '@/hooks/useCategorias';
-import { CONTAS_DRE } from '@/lib/conciliacao/types';
+import { CONTAS_DRE } from '@/calculations/conciliacao/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';

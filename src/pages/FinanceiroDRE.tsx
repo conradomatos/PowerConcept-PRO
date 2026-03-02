@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { buildDREEstrutura, buildDREAnual, buildDREComDados, buildDREAnualComDados } from '@/lib/conciliacao/dre';
-import type { DRELinha, DRESecao, DREAnual } from '@/lib/conciliacao/types';
+import { buildDREEstrutura, buildDREAnual, buildDREComDados, buildDREAnualComDados } from '@/calculations/conciliacao/dre';
+import type { DRELinha, DRESecao, DREAnual } from '@/calculations/conciliacao/types';
 import { useDREData } from '@/hooks/useDREData';
 import { useCategoriasAtivas } from '@/hooks/useCategorias';
 import { Button } from '@/components/ui/button';

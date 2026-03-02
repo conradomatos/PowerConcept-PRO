@@ -20,9 +20,9 @@ import {
   Info,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { executarConciliacaoFromData } from '@/lib/conciliacao/engine';
-import type { ResultadoConciliacao, LancamentoBanco, LancamentoOmie } from '@/lib/conciliacao/types';
-import { gerarRelatorioMD, gerarExcelDivergencias, gerarRelatorioPDF } from '@/lib/conciliacao/outputs';
+import { executarConciliacaoFromData } from '@/calculations/conciliacao/engine';
+import type { ResultadoConciliacao, LancamentoBanco, LancamentoOmie } from '@/calculations/conciliacao/types';
+import { gerarRelatorioMD, gerarExcelDivergencias, gerarRelatorioPDF } from '@/calculations/conciliacao/outputs';
 import { useConciliacaoStorage, rehydrateBanco, rehydrateOmie, rehydrateResultado } from '@/hooks/useConciliacaoStorage';
 import ImportPreviewCard from '@/components/conciliacao/ImportPreviewCard';
 import ResultTabs from '@/components/conciliacao/ResultTabs';
