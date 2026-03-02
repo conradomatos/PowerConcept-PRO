@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/currency';
 import { formatCPF } from '@/lib/cpf';
 import { CustoForm } from '@/components/CustoForm';
-import { CustoColaborador, calcularCustos } from '@/lib/custos';
+import { CustoColaborador, calcularCustos } from '@/calculations/custos-pessoal';
 import { 
   Search, 
   Download, 

@@ -24,7 +24,7 @@ import {
   formatCurrency,
   formatCurrencyInput,
   parseCurrencyToNumber,
-} from '@/lib/custos';
+} from '@/calculations/custos-pessoal';
 
 type Collaborator = Database['public']['Tables']['collaborators']['Row'];
 type EmployeeStatus = Database['public']['Enums']['employee_status'];

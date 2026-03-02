@@ -1,3 +1,25 @@
+/**
+ * Motor de Conciliação Bancária
+ *
+ * Centraliza toda a lógica de reconciliação entre:
+ * - Extratos bancários (Banco)
+ * - Lançamentos contábeis (Omie)
+ * - Transações de cartão de crédito
+ *
+ * FLUXO DE CONCILIAÇÃO:
+ * 1. Auto-detecta e filtra por conta corrente (score por overlap de valores)
+ * 2. Executa 4 camadas de matching em cascata:
+ *    - Camada A: Match exato (CNPJ + valor + data ≤1 dia) → Confiança ALTA
+ *    - Camada B: Match flexível (nome + valor + data ≤3 dias)
+ *    - Camada C: Match por valor + data
+ *    - Camada D: Match residual
+ * 3. Detecta duplicidades (tipo E)
+ * 4. Classifica divergências restantes (A/B/C/D/T)
+ * 5. Sugere categorias automaticamente por keywords
+ *
+ * Resultado: Matches com confiança graduada + divergências + sugestões
+ */
+
 import { matchCamadaA, matchCamadaB, matchCamadaC, matchCamadaD, matchFaturaCartao } from './matcher';
 import { detectDuplicates, classifyDivergencias } from './classifier';
 import { parseBanco, parseOmie, parseCartaoFromText, workbookToRows, csvToText } from './parsers';

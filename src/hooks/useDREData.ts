@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { getAliquotas, calcularImpostosDRE } from '@/lib/financeiro/aliquotas';
+import { calcularImpostosDRE } from '@/calculations/impostos';
+import { getAliquotas } from '@/services/storage/aliquotas';
 
 export interface DREDadosMes {
   conta_dre: string;

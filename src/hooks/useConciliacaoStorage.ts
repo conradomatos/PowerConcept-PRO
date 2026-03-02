@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { LancamentoBanco, LancamentoOmie, TransacaoCartao, ResultadoConciliacao } from '@/lib/conciliacao/types';
+import type { LancamentoBanco, LancamentoOmie, TransacaoCartao, ResultadoConciliacao } from '@/calculations/conciliacao/types';
 
 interface SaveImportParams {
   tipo: 'extrato_banco' | 'extrato_omie' | 'fatura_cartao';

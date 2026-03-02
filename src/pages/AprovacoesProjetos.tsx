@@ -34,7 +34,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { syncProjectToOmie } from '@/lib/omie-sync';
+import { syncProjectToOmie } from '@/services/omie/sync';
 import type { Database } from '@/integrations/supabase/types';
 
 type Projeto = Database['public']['Tables']['projetos']['Row'];
