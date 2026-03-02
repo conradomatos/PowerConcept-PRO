@@ -21,10 +21,12 @@ import { Database } from '@/integrations/supabase/types';
 import {
   Classificacao,
   calcularCustos,
+} from '@/calculations/custos-pessoal';
+import {
   formatCurrency,
   formatCurrencyInput,
   parseCurrencyToNumber,
-} from '@/calculations/custos-pessoal';
+} from '@/lib/currency';
 
 type Collaborator = Database['public']['Tables']['collaborators']['Row'];
 type EmployeeStatus = Database['public']['Enums']['employee_status'];

@@ -14,14 +14,16 @@ import { ptBR } from 'date-fns/locale/pt-BR';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { 
-  CustoColaborador, 
+import {
+  CustoColaborador,
   Classificacao,
-  calcularCustos, 
+  calcularCustos,
+} from '@/calculations/custos-pessoal';
+import {
   formatCurrency,
   formatCurrencyInput,
-  parseCurrencyToNumber 
-} from '@/calculations/custos-pessoal';
+  parseCurrencyToNumber,
+} from '@/lib/currency';
 import { useAuth } from '@/hooks/useAuth';
 
 interface CustoFormProps {

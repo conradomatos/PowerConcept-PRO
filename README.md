@@ -1,73 +1,88 @@
-# Welcome to your Lovable project
+# PowerConcept
 
-## Project info
+Plataforma de Gestão de Projetos e Portfólio para construção civil.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Stack
 
-## How can I edit this code?
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | React 18 + TypeScript + Vite + shadcn/ui + Tailwind CSS + Recharts |
+| Backend | Supabase (PostgreSQL + Auth + RLS + Edge Functions + Storage) |
+| ERP | Omie (financeiro, NFs, conciliação) |
+| Infra | Hostinger VPS + Docker + Caddy |
 
-There are several ways of editing your application.
+## Módulos
 
-**Use Lovable**
+- **Home** — Dashboard de entrada
+- **Recursos** — Colaboradores, custos pessoais, importação Secullum
+- **Projetos** — Projetos, empresas, planejamento, apontamento diário
+- **Orçamentos** — Orçamentos detalhados com composições, BDI, MO
+- **Relatórios** — Dashboard gerencial, custos por projeto, rentabilidade
+- **Financeiro** — DRE, conciliação bancária, cartão de crédito, categorias Omie
+- **Frotas** — Veículos, abastecimentos, KM, manutenção, custos, relatórios
+- **AI Lab** — Agentes IA especializados para construção civil
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Estrutura do código
 
-Changes made via Lovable will be committed automatically to this repo.
+```
+src/
+├── calculations/            # Fórmulas e cálculos puros (análogo ao Power Query)
+├── rules/                   # Regras de negócio, constantes, alíquotas
+├── services/                # Integrações externas (Omie, storage)
+├── components/              # Componentes React por módulo
+├── hooks/                   # Custom hooks (useQuery/useMutation)
+├── pages/                   # Páginas por módulo
+├── lib/                     # Utilitários de UI (formatação, validação)
+└── integrations/            # Cliente Supabase e types
+    supabase/
+    ├── functions/           # Edge Functions (create-user, omie-*, generate-pdf)
+    └── migrations/          # 79 migrations SQL
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+backend/
+└── whatsapp-bot/           # Bot WhatsApp (Python/FastAPI)
 ```
 
-**Edit a file directly in GitHub**
+## Setup local
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+git clone https://github.com/conradomatos/POWERCONCEPT_LOVEBLE.git
+cd POWERCONCEPT_LOVEBLE
 
-**Use GitHub Codespaces**
+cp .env.example .env   # preencher com suas credenciais Supabase
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+npm install
+npm run dev            # http://localhost:8080
+```
 
-## What technologies are used for this project?
+## Variáveis de ambiente
 
-This project is built with:
+```
+VITE_SUPABASE_URL=https://SEU_PROJECT_ID.supabase.co
+VITE_SUPABASE_ANON_KEY=sua_anon_key_aqui
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Deploy
 
-## How can I deploy this project?
+O projeto usa Docker + Nginx para deploy:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+docker build \
+  --build-arg VITE_SUPABASE_URL=https://xxx.supabase.co \
+  --build-arg VITE_SUPABASE_ANON_KEY=sua_key \
+  -t powerconcept .
 
-## Can I connect a custom domain to my Lovable project?
+docker run -p 80:80 powerconcept
+```
 
-Yes, you can!
+## Workflow de desenvolvimento
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. **Briefings técnicos** → Claude Code implementa em branch `claude/*`
+2. **PR no GitHub** → review → merge em `main`
+3. **Migrations SQL** → executar manualmente no Supabase SQL Editor
+4. **Edge Functions** → deploy via Supabase Dashboard
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+---
+
+## Licença
+
+Proprietary — Concept Engenharia
