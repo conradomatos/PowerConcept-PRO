@@ -166,22 +166,6 @@ function executarMatchingEClassificacao(
   const matches: Match[] = [];
   const divergencias: Divergencia[] = [];
 
-  // === DIAGNÓSTICO FOPAG ===
-  const fopagBanco = bancoFiltrado.filter(b => b.tipo === 'PIX_ENVIADO' || b.tipo === 'FOLHA');
-  const fopagOmie = omieFiltrado.filter(o => /FOPAG|FOLHA|SALARIO|SALÁRIO/i.test(o.categoria));
-  console.log(`[FOPAG Diag] Banco: ${fopagBanco.length} entradas PIX_ENVIADO/FOLHA`);
-  console.log(`[FOPAG Diag] Omie: ${fopagOmie.length} entradas com categoria FOPAG/FOLHA`);
-  for (const fo of fopagOmie.slice(0, 5)) {
-    console.log(`[FOPAG Diag] Omie FOPAG: cliente="${fo.clienteFornecedor}" valor=${fo.valor} data=${fo.dataStr} cat="${fo.categoria}" obs="${(fo.observacoes || '').substring(0, 80)}" razao="${fo.razaoSocial}"`);
-  }
-  const luizBanco = bancoFiltrado.find(b => b.nome?.toUpperCase().includes('LUIZ ALBERTO'));
-  const luizOmie = omieFiltrado.find(o => (o.observacoes || '').toUpperCase().includes('LUIZ ALBERTO'));
-  const luizOmieByValor = fopagOmie.find(o => Math.abs(o.valor - (-1572.22)) < 0.01);
-  console.log(`[FOPAG Diag] LUIZ ALBERTO no banco: ${luizBanco ? `tipo=${luizBanco.tipo} val=${luizBanco.valor} nome="${luizBanco.nome}"` : 'NAO ENCONTRADO'}`);
-  console.log(`[FOPAG Diag] LUIZ ALBERTO no Omie (por obs): ${luizOmie ? `cliente="${luizOmie.clienteFornecedor}" val=${luizOmie.valor} obs="${(luizOmie.observacoes || '').substring(0, 80)}"` : 'NAO ENCONTRADO'}`);
-  console.log(`[FOPAG Diag] Omie FOPAG com valor -1572.22: ${luizOmieByValor ? `cliente="${luizOmieByValor.clienteFornecedor}" obs="${(luizOmieByValor.observacoes || '').substring(0, 60)}"` : 'NAO ENCONTRADO'}`);
-  // === FIM DIAGNÓSTICO ===
-
   matchCamadaA(bancoFiltrado, omieFiltrado, matches);
   matchCamadaB(bancoFiltrado, omieFiltrado, matches);
   matchCamadaC(bancoFiltrado, omieFiltrado, matches);

@@ -4,6 +4,31 @@ export function normalizeCnpjCpf(val: string | null | undefined): string {
   return String(val).replace(/\D/g, '');
 }
 
+/**
+ * Compara dois CNPJs pela raiz (8 primeiros dígitos).
+ * Empresas com filiais diferentes (matriz vs filial) têm a mesma raiz.
+ * Ex: 47674429000128 (filial 0001) e 47674429000632 (filial 0006) → raiz 47674429 → compatíveis.
+ * CPFs (11 dígitos) são comparados exatamente.
+ * @param cnpj1 - Primeiro CNPJ/CPF (pode estar formatado ou não)
+ * @param cnpj2 - Segundo CNPJ/CPF (pode estar formatado ou não)
+ * @returns true se CNPJs têm raiz compatível ou se são idênticos (para CPF)
+ */
+export function cnpjRaizCompativel(cnpj1: string, cnpj2: string): boolean {
+  const n1 = normalizeCnpjCpf(cnpj1);
+  const n2 = normalizeCnpjCpf(cnpj2);
+  if (!n1 || !n2) return false;
+
+  // Match exato primeiro
+  if (n1 === n2) return true;
+
+  // Se ambos são CNPJ (14 dígitos), comparar raiz (8 primeiros)
+  if (n1.length === 14 && n2.length === 14) {
+    return n1.substring(0, 8) === n2.substring(0, 8);
+  }
+
+  return false;
+}
+
 export function formatCnpj(raw: string): string {
   const digits = raw.replace(/\D/g, '');
   if (digits.length === 14) {

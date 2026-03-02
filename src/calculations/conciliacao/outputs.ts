@@ -275,6 +275,21 @@ export function gerarRelatorioMD(resultado: ResultadoConciliacao): void {
     L('');
   }
 
+  if (divByTipo['P']?.length) {
+    const divs = divByTipo['P'];
+    L('### Previsões Financeiras (não são dívidas)');
+    L('> Previsões geradas automaticamente pelo Omie a partir de pedidos de compra, CT-e ou NF-e. Não representam contas a pagar reais.');
+    L('');
+    L('| # | Data | Valor | Fornecedor | Origem | Ação |');
+    L('|---|------|-------|------------|--------|------|');
+    divs.forEach((d, i) => {
+      L(`| ${i + 1} | ${d.data || ''} | ${formatBRL(d.valor)} | ${descricaoLegivel(d)} | ${d.origem || ''} | ${d.acao || ''} |`);
+    });
+    const totalP = divs.reduce((s, d) => s + Math.abs(d.valor), 0);
+    L(`| | | **${formatBRL(totalP)}** | **${divs.length} itens** | | |`);
+    L('');
+  }
+
   L('---');
   L('');
 
@@ -344,6 +359,10 @@ export function gerarRelatorioMD(resultado: ResultadoConciliacao): void {
     const totalPagar = r.divergencias.filter(d => d.tipo === 'G').reduce((s, d) => s + Math.abs(d.valor), 0);
     L(`- [ ] **ATRASO PAGAR:** ${divCounts['G']} contas a pagar vencidas, total ${formatBRL(totalPagar)} — verificar pagamentos`);
   }
+  if (divCounts['P']) {
+    const totalPrevisao = r.divergencias.filter(d => d.tipo === 'P').reduce((s, d) => s + Math.abs(d.valor), 0);
+    L(`- [ ] **PREVISOES:** ${divCounts['P']} previsoes financeiras (pedidos/CT-e/NF-e), total ${formatBRL(totalPrevisao)} — NAO sao dividas reais`);
+  }
   if (divCounts['F']) {
     const totalF = r.divergencias.filter(d => d.tipo === 'F').reduce((s, d) => s + Math.abs(d.valor), 0);
     L(`- [ ] **CONTA ERRADA:** ${divCounts['F']} possíveis lançamentos na conta errada (cartão), total ${formatBRL(totalF)} — mover no Omie`);
@@ -407,6 +426,7 @@ export function gerarExcelDivergencias(resultado: ResultadoConciliacao): void {
     'E': 'DUPLICIDADE',
     'F': 'POSSÍVEL CONTA ERRADA',
     'G': 'CONTA A PAGAR EM ATRASO',
+    'P': 'PREVISÃO FINANCEIRA',
     'I': 'CARTÃO - IMPORTAR',
   };
 
@@ -779,6 +799,7 @@ export function gerarRelatorioPDF(resultado: ResultadoConciliacao): void {
     ['F', 'Tipo F — Possivel Conta Errada (Cartao)', [255, 235, 238]],
     ['B*', 'Contas a Receber em Atraso', [255, 243, 224]],
     ['G', 'Contas a Pagar em Atraso', [255, 237, 213]],
+    ['P', 'Previsoes Financeiras (nao sao dividas)', [230, 240, 255]],
     ['B', 'Tipo B — A mais no Omie', [243, 229, 245]],
     ['C', 'Tipo C — Valor divergente', [255, 253, 231]],
     ['E', 'Tipo E — Duplicidades', [243, 229, 245]],
@@ -794,7 +815,7 @@ export function gerarRelatorioPDF(resultado: ResultadoConciliacao): void {
     doc.text(`${titulo} (${divs.length})`, margin, y);
     y += 5;
 
-    const hasNF = ['B', 'F', 'B*'].includes(tipo);
+    const hasNF = ['B', 'F', 'B*', 'G', 'P'].includes(tipo);
 
     const bodyRows = divs.map((d, i) => {
       const base = [
@@ -940,6 +961,10 @@ export function gerarRelatorioPDF(resultado: ResultadoConciliacao): void {
   if (divCounts['G']) {
     const totalPagar = r.divergencias.filter(d => d.tipo === 'G').reduce((s, d) => s + Math.abs(d.valor), 0);
     checkItems.push({ texto: `ATRASO PAGAR: ${divCounts['G']} contas a pagar vencidas, total ${fmt(totalPagar)} - verificar pagamentos`, cor: [200, 120, 0] });
+  }
+  if (divCounts['P']) {
+    const totalPrevisao = r.divergencias.filter(d => d.tipo === 'P').reduce((s, d) => s + Math.abs(d.valor), 0);
+    checkItems.push({ texto: `PREVISOES: ${divCounts['P']} previsoes financeiras, total ${fmt(totalPrevisao)} - nao sao dividas reais`, cor: [100, 150, 200] });
   }
   if (divCounts['F']) {
     const totalF = r.divergencias.filter(d => d.tipo === 'F').reduce((s, d) => s + Math.abs(d.valor), 0);

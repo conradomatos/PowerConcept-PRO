@@ -1,4 +1,4 @@
-import { normalizeCnpjCpf, nomeCompativel, daysDiff } from './utils';
+import { normalizeCnpjCpf, cnpjRaizCompativel, nomeCompativel, daysDiff } from './utils';
 import type { LancamentoBanco, LancamentoOmie, Match } from './types';
 
 function markMatch(b: LancamentoBanco, o: LancamentoOmie, camada: string, tipo: string, matches: Match[]) {
@@ -27,10 +27,21 @@ export function matchCamadaA(banco: LancamentoBanco[], omie: LancamentoOmie[], m
       if (o.matched) continue;
       const oCnpj = normalizeCnpjCpf(o.cnpjCpf);
 
+      // Match exato: CNPJ completo + valor exato + data ±1
       if (bCnpj && oCnpj && bCnpj === oCnpj) {
         if (Math.abs(b.valor - o.valor) < 0.01) {
           if (daysDiff(b.data, o.data) <= 1) {
             markMatch(b, o, 'A', 'CNPJ+Valor+Data', matches);
+            break;
+          }
+        }
+      }
+
+      // Match raiz CNPJ (filial diferente) + valor exato + data ±1
+      if (bCnpj && oCnpj && bCnpj !== oCnpj && cnpjRaizCompativel(bCnpj, oCnpj)) {
+        if (Math.abs(b.valor - o.valor) < 0.01) {
+          if (daysDiff(b.data, o.data) <= 1) {
+            markMatch(b, o, 'A', 'CNPJ_Raiz+Valor+Data', matches);
             break;
           }
         }
@@ -49,10 +60,14 @@ export function matchCamadaA(banco: LancamentoBanco[], omie: LancamentoOmie[], m
             }
           }
         }
-        if (bCnpj && normalizeCnpjCpf(obsUpper.replace(/\./g, '').replace(/\//g, '').replace(/-/g, '')).includes(bCnpj)) {
-          if (daysDiff(b.data, o.data) <= 3) {
-            markMatch(b, o, 'A', 'CNPJ_obs+Valor', matches);
-            break;
+        // Check CNPJ do banco nas observações do Omie (sem normalizar toda a obs)
+        if (bCnpj && bCnpj.length >= 11) {
+          const obsDigits = (o.observacoes || '').replace(/[.\-\/]/g, '');
+          if (obsDigits.includes(bCnpj)) {
+            if (daysDiff(b.data, o.data) <= 3) {
+              markMatch(b, o, 'A', 'CNPJ_obs+Valor', matches);
+              break;
+            }
           }
         }
       }
@@ -79,14 +94,16 @@ export function matchCamadaB(banco: LancamentoBanco[], omie: LancamentoOmie[], m
         }
       }
 
-      if (bCnpj && oCnpj && bCnpj === oCnpj && daysDiff(b.data, o.data) <= 5) {
+      // CNPJ (exato ou raiz) + data ±5 + valor próximo (5%)
+      if (bCnpj && oCnpj && cnpjRaizCompativel(bCnpj, oCnpj) && daysDiff(b.data, o.data) <= 5) {
         if (b.valor !== 0 && Math.abs(b.valor - o.valor) / Math.abs(b.valor) < 0.05) {
           markMatch(b, o, 'B', 'CNPJ+Data+ValorProx', matches);
           break;
         }
       }
 
-      if (bCnpj && oCnpj && bCnpj === oCnpj && Math.abs(b.valor - o.valor) < 0.01) {
+      // CNPJ (exato ou raiz) + valor exato + data ±5
+      if (bCnpj && oCnpj && cnpjRaizCompativel(bCnpj, oCnpj) && Math.abs(b.valor - o.valor) < 0.01) {
         if (daysDiff(b.data, o.data) <= 5) {
           markMatch(b, o, 'B', 'CNPJ+Valor+DataProx', matches);
           break;
@@ -98,6 +115,18 @@ export function matchCamadaB(banco: LancamentoBanco[], omie: LancamentoOmie[], m
         if (bCnpj && obsNorm.replace(/\D/g, '').includes(bCnpj)) {
           markMatch(b, o, 'B', 'CNPJ_obs_parcial+Valor', matches);
           break;
+        }
+      }
+
+      // Match por nome do banco nas observações do Omie (1+ palavra significativa)
+      if (Math.abs(b.valor - o.valor) < 0.01 && daysDiff(b.data, o.data) <= 3) {
+        const bNome = (b.nome || '').toUpperCase().trim();
+        if (bNome.length >= 5 && o.observacoes) {
+          const obsUpper = o.observacoes.toUpperCase();
+          if (obsUpper.includes(bNome)) {
+            markMatch(b, o, 'B', 'Nome_obs+Valor', matches);
+            break;
+          }
         }
       }
     }
@@ -128,24 +157,28 @@ function matchCamadaB2(banco: LancamentoBanco[], omie: LancamentoOmie[], matches
 export function matchCamadaC(banco: LancamentoBanco[], omie: LancamentoOmie[], matches: Match[]) {
   const unmatchedOmie = omie.filter(o => !o.matched);
 
+  // === Agrupamento por CNPJ (exato ou raiz) ===
   for (const b of banco) {
     if (b.matched) continue;
     const bCnpj = normalizeCnpjCpf(b.cnpjCpf);
     if (!bCnpj) continue;
 
+    // Buscar candidatos por CNPJ raiz (inclui filiais)
     const candidates = unmatchedOmie.filter(o =>
       !o.matched &&
-      normalizeCnpjCpf(o.cnpjCpf) === bCnpj &&
+      cnpjRaizCompativel(normalizeCnpjCpf(o.cnpjCpf), bCnpj) &&
       daysDiff(b.data, o.data) <= 5
     );
 
     if (candidates.length >= 2) {
       const total = candidates.reduce((sum, c) => sum + c.valor, 0);
-      if (Math.abs(total - b.valor) < 0.01) {
+      // Tolerância proporcional: R$ 0,02 por parcela (acomoda arredondamentos)
+      const tolerancia = Math.max(0.01, 0.02 * candidates.length);
+      if (Math.abs(total - b.valor) < tolerancia) {
         for (const c of candidates) {
           markMatch(b, c, 'C', `Agrupamento(${candidates.length})`, matches);
         }
-        break;
+        continue;
       }
     }
   }
@@ -214,7 +247,7 @@ export function matchCamadaC(banco: LancamentoBanco[], omie: LancamentoOmie[], m
 
     const candidates = unmatchedOmie.filter(o =>
       !o.matched &&
-      normalizeCnpjCpf(o.cnpjCpf) === bCnpj &&
+      cnpjRaizCompativel(normalizeCnpjCpf(o.cnpjCpf), bCnpj) &&
       daysDiff(b.data, o.data) <= 45 &&
       ((o.observacoes || '').toUpperCase().includes('CT-E') ||
        (o.tipoDoc || '').toUpperCase().includes('CT-E') ||
@@ -277,7 +310,10 @@ export function matchCamadaD(banco: LancamentoBanco[], omie: LancamentoOmie[], m
 
       const bCnpj = normalizeCnpjCpf(b.cnpjCpf);
       const oCnpj = normalizeCnpjCpf(o.cnpjCpf);
-      if (bCnpj && oCnpj && bCnpj === oCnpj) score += 3;
+      if (bCnpj && oCnpj) {
+        if (bCnpj === oCnpj) score += 3;
+        else if (cnpjRaizCompativel(bCnpj, oCnpj)) score += 2;
+      }
 
       if (score > bestScore && score >= 3) {
         bestScore = score;

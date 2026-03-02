@@ -104,22 +104,47 @@ export function classifyDivergencias(
     }
 
     if (isAtrasado && (isPagar || isPrevisao)) {
-      divergencias.push({
-        tipo: 'G',
-        tipoNome: 'CONTA A PAGAR EM ATRASO',
-        fonte: 'Omie',
-        data: o.dataStr,
-        valor: o.valor,
-        descricao: o.razaoSocial || o.clienteFornecedor || o.cnpjCpf || '',
-        cnpjCpf: o.cnpjCpf,
-        nome: o.clienteFornecedor,
-        situacao: o.situacao,
-        origem: o.origem,
-        acao: 'Conta a pagar em atraso — verificar pagamento ao fornecedor',
-        obs: o.observacoes || '',
-        banco: null,
-        omie: o,
-      });
+      // Separar previsões (pedidos de compra, CT-e, NF-e) de contas a pagar reais
+      const isPrevisaoCompra = o.origem.toLowerCase().includes('previsão') ||
+                               o.origem.toLowerCase().includes('previsao');
+
+      if (isPrevisaoCompra) {
+        // Tipo P — Previsões financeiras (não são dívidas reais)
+        divergencias.push({
+          tipo: 'P',
+          tipoNome: 'PREVISÃO FINANCEIRA',
+          fonte: 'Omie',
+          data: o.dataStr,
+          valor: o.valor,
+          descricao: o.razaoSocial || o.clienteFornecedor || o.cnpjCpf || '',
+          cnpjCpf: o.cnpjCpf,
+          nome: o.clienteFornecedor,
+          situacao: o.situacao,
+          origem: o.origem,
+          acao: `Previsão de ${o.origem.replace('Previsão de ', '')} — não é conta a pagar. Verificar se NF-e foi recebida.`,
+          obs: o.observacoes || '',
+          banco: null,
+          omie: o,
+        });
+      } else {
+        // Tipo G — Conta a pagar real em atraso
+        divergencias.push({
+          tipo: 'G',
+          tipoNome: 'CONTA A PAGAR EM ATRASO',
+          fonte: 'Omie',
+          data: o.dataStr,
+          valor: o.valor,
+          descricao: o.razaoSocial || o.clienteFornecedor || o.cnpjCpf || '',
+          cnpjCpf: o.cnpjCpf,
+          nome: o.clienteFornecedor,
+          situacao: o.situacao,
+          origem: o.origem,
+          acao: 'Conta a pagar em atraso — verificar pagamento ao fornecedor',
+          obs: o.observacoes || '',
+          banco: null,
+          omie: o,
+        });
+      }
       continue;
     }
 
