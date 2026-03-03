@@ -152,49 +152,32 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
     setIsSubmitting(true);
 
     try {
-      // Get current session to pass auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session?.access_token) {
-        toast.error('Sessão expirada. Faça login novamente.');
+      // Call edge function to create user securely
+      const { data, error: invokeError } = await supabase.functions.invoke('create-user', {
+        body: {
+          email,
+          password,
+          fullName: colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '',
+          roles: selectedRoles,
+          collaboratorId: selectedColaborador,
+        },
+      });
+
+      if (invokeError) {
+        toast.error('Erro ao chamar a função de criação de usuário');
         return;
       }
 
-      // Call edge function to create user securely
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            email,
-            password,
-            fullName: colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '',
-            roles: selectedRoles,
-            collaboratorId: selectedColaborador,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        if (result.error?.includes('already registered') || result.error?.includes('already been registered')) {
-          toast.error('Este email já está cadastrado');
-        } else {
-          toast.error(result.error || 'Erro ao criar usuário');
-        }
+      if (data?.error) {
+        toast.error(data.error);
         return;
       }
 
       // Atribuir perfis RBAC se selecionados
-      if (selectedRbacRoles.length > 0 && result.userId) {
+      if (selectedRbacRoles.length > 0 && data?.userId) {
         for (const roleId of selectedRbacRoles) {
           try {
-            await assignRbacRole.mutateAsync({ userId: result.userId, roleId });
+            await assignRbacRole.mutateAsync({ userId: data.userId, roleId });
           } catch {
             // Erros individuais já tratados pelo mutation
           }
