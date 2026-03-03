@@ -4,12 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Eye, EyeOff, RefreshCw, Loader2 } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
+import { useRbacRoles, useAssignRoleToUser } from '@/hooks/useRbacAdmin';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -68,7 +70,11 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRoles, setSelectedRoles] = useState<AppRole[]>([]);
+  const [selectedRbacRoles, setSelectedRbacRoles] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: rbacRoles = [] } = useRbacRoles();
+  const assignRbacRole = useAssignRoleToUser();
 
   // Fetch collaborators that don't have a linked user
   const { data: colaboradores } = useQuery({
@@ -93,6 +99,7 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
       setEmail('');
       setPassword('');
       setSelectedRoles([]);
+      setSelectedRbacRoles([]);
       setShowPassword(false);
     }
   }, [open]);
@@ -108,10 +115,18 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
   }, [selectedColaborador, colaboradores]);
 
   const handleRoleToggle = (role: AppRole) => {
-    setSelectedRoles(prev => 
-      prev.includes(role) 
+    setSelectedRoles(prev =>
+      prev.includes(role)
         ? prev.filter(r => r !== role)
         : [...prev, role]
+    );
+  };
+
+  const toggleRbacRole = (roleId: string) => {
+    setSelectedRbacRoles(prev =>
+      prev.includes(roleId)
+        ? prev.filter(id => id !== roleId)
+        : [...prev, roleId]
     );
   };
 
@@ -173,6 +188,17 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
           toast.error(result.error || 'Erro ao criar usuário');
         }
         return;
+      }
+
+      // Atribuir perfis RBAC se selecionados
+      if (selectedRbacRoles.length > 0 && result.userId) {
+        for (const roleId of selectedRbacRoles) {
+          try {
+            await assignRbacRole.mutateAsync({ userId: result.userId, roleId });
+          } catch {
+            // Erros individuais já tratados pelo mutation
+          }
+        }
       }
 
       toast.success('Usuário criado com sucesso');
@@ -276,7 +302,7 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
             )}
           </div>
 
-          {/* Papéis */}
+          {/* Papéis (legado) */}
           <div className="space-y-2">
             <Label>Papéis *</Label>
             <div className="grid grid-cols-2 gap-2">
@@ -293,6 +319,27 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* Perfis RBAC */}
+          <div className="space-y-3 pt-4 border-t">
+            <Label className="text-sm font-medium">Perfis de Acesso (RBAC)</Label>
+            <p className="text-xs text-muted-foreground">
+              Perfis granulares que controlam o acesso por módulo e ação.
+            </p>
+            {rbacRoles.filter(r => r.is_active).map((role) => (
+              <div key={role.id} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`rbac-role-${role.id}`}
+                  checked={selectedRbacRoles.includes(role.id)}
+                  onCheckedChange={() => toggleRbacRole(role.id)}
+                />
+                <Label htmlFor={`rbac-role-${role.id}`} className="text-sm cursor-pointer">
+                  {role.name}
+                  {role.is_system && <Badge variant="outline" className="ml-2 text-[10px]">Sistema</Badge>}
+                </Label>
+              </div>
+            ))}
           </div>
         </div>
 

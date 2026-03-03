@@ -56,6 +56,7 @@ import CatalogoEquipamentos from "./pages/orcamentos/bases/CatalogoEquipamentos"
 import IncidenciasMO from "./pages/orcamentos/bases/IncidenciasMO";
 import CatalogoImpostos from "./pages/orcamentos/bases/CatalogoImpostos";
 import CatalogoMarkup from "./pages/orcamentos/bases/CatalogoMarkup";
+import RbacRoles from "./pages/admin/RbacRoles";
 import SemAcesso from "./pages/SemAcesso";
 import NotFound from "./pages/NotFound";
 import AILabDashboard from "./pages/ai-lab/AILabDashboard";
@@ -95,6 +96,7 @@ const App = () => (
             <Route path="/apontamentos" element={<ApontamentosConsolidado />} />
             <Route path="/apontamento-diario" element={<ApontamentoDiario />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/roles" element={<RbacRoles />} />
             <Route path="/aprovacoes-projetos" element={<AprovacoesProjetos />} />
             <Route path="/collaborators/:id/costs" element={<CollaboratorCosts />} />
             <Route path="/collaborators/:id/defaults" element={<CollaboratorDefaults />} />

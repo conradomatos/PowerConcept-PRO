@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPlus, Users, UserCheck, Clock } from 'lucide-react';
+import { UserPlus, Users, UserCheck, Clock, Shield } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AddUserDialog } from '@/components/admin/AddUserDialog';
 import { EditUserDialog } from '@/components/admin/EditUserDialog';
-import { ManageRolesDialog } from '@/components/admin/ManageRolesDialog';
+import { ManageRbacRolesDialog } from '@/components/admin/ManageRbacRolesDialog';
 import { ResetPasswordDialog } from '@/components/admin/ResetPasswordDialog';
 import { UserActionsMenu } from '@/components/admin/UserActionsMenu';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
@@ -231,9 +231,15 @@ export default function Admin() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">Administração de Usuários</h2>
-          <p className="text-muted-foreground">Gerencie usuários e permissões do sistema</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Administração de Usuários</h2>
+            <p className="text-muted-foreground">Gerencie usuários e permissões do sistema</p>
+          </div>
+          <Button variant="outline" onClick={() => navigate('/admin/roles')} className="gap-2">
+            <Shield className="h-4 w-4" />
+            Perfis de Acesso
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -407,12 +413,11 @@ export default function Admin() {
         onSuccess={fetchUsers}
       />
 
-      <ManageRolesDialog
+      <ManageRbacRolesDialog
         open={rolesDialogOpen}
         onOpenChange={setRolesDialogOpen}
         user={selectedUser}
         onSuccess={fetchUsers}
-        isSuperAdmin={isSuperAdmin()}
       />
 
       <ResetPasswordDialog
