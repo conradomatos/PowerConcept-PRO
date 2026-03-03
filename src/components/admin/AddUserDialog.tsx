@@ -35,30 +35,30 @@ function generatePassword(): string {
   const numbers = '0123456789';
   const symbols = '!@#$%&*';
   const all = lowercase + uppercase + numbers + symbols;
-  
+
   let password = '';
   password += lowercase[Math.floor(Math.random() * lowercase.length)];
   password += uppercase[Math.floor(Math.random() * uppercase.length)];
   password += numbers[Math.floor(Math.random() * numbers.length)];
   password += symbols[Math.floor(Math.random() * symbols.length)];
-  
+
   for (let i = 4; i < 8; i++) {
     password += all[Math.floor(Math.random() * all.length)];
   }
-  
+
   return password.split('').sort(() => Math.random() - 0.5).join('');
 }
 
 function getPasswordStrength(password: string): { label: string; color: string; width: string } {
   if (!password) return { label: '', color: 'bg-muted', width: '0%' };
-  
+
   let score = 0;
   if (password.length >= 8) score++;
   if (/[a-z]/.test(password)) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^a-zA-Z0-9]/.test(password)) score++;
-  
+
   if (score <= 2) return { label: 'Fraca', color: 'bg-red-500', width: '33%' };
   if (score <= 4) return { label: 'Média', color: 'bg-amber-500', width: '66%' };
   return { label: 'Forte', color: 'bg-green-500', width: '100%' };
@@ -154,38 +154,37 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
     try {
       // Get current session to pass auth token
       const { data: { session } } = await supabase.auth.getSession();
-      
+
       if (!session?.access_token) {
         toast.error('Sessão expirada. Faça login novamente.');
         return;
       }
 
       // Call edge function to create user securely
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            email,
-            password,
-            fullName: colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '',
-            roles: selectedRoles,
-            collaboratorId: selectedColaborador,
-          }),
-        }
-      );
+      const headers = {
+        Authorization: `Bearer ${session.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+      };
 
-      const result = await response.json();
+      console.log("Calling create-user function with explicit headers:", Object.keys(headers));
+      const { data: result, error: invokeError } = await supabase.functions.invoke('create-user', {
+        body: {
+          email,
+          password,
+          fullName: colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '',
+          roles: selectedRoles,
+          collaboratorId: selectedColaborador,
+        },
+        headers
+      });
 
-      if (!response.ok) {
-        if (result.error?.includes('already registered') || result.error?.includes('already been registered')) {
+      if (invokeError || result?.error) {
+        console.error("DEBUG Edge Function Error:", invokeError, result);
+        const errorMsg = invokeError?.message || result?.error || 'Erro ao criar usuário';
+        if (errorMsg.includes('already registered') || errorMsg.includes('já está cadastrado') || errorMsg.includes('already been registered')) {
           toast.error('Este email já está cadastrado');
         } else {
-          toast.error(result.error || 'Erro ao criar usuário');
+          toast.error(`Erro Função: ${errorMsg}`);
         }
         return;
       }
