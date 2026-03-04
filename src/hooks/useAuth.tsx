@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -100,9 +100,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRbacRoleCodes([]);
   };
 
-  const hasRole = (role: AppRole) => roles.includes(role);
-  const hasAnyRole = () => roles.length > 0 || rbacRoleCodes.length > 0;
-  const isGodMode = () => rbacRoleCodes.includes('god_mode') || roles.includes('super_admin');
+  const hasRole = useCallback(
+    (role: AppRole) => roles.includes(role),
+    [roles]
+  );
+  const hasAnyRole = useCallback(
+    () => roles.length > 0 || rbacRoleCodes.length > 0,
+    [roles, rbacRoleCodes]
+  );
+  const isGodMode = useCallback(
+    () => rbacRoleCodes.includes('god_mode') || roles.includes('super_admin'),
+    [rbacRoleCodes, roles]
+  );
 
   return (
     <AuthContext.Provider

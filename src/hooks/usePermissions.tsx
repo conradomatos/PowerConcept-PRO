@@ -8,6 +8,7 @@
  * if (can('projetos.os.editar')) { ... }
  */
 
+import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -71,50 +72,43 @@ export function usePermissions() {
   });
 
   // Cache de permission_keys para lookup O(1)
-  const permissionSet = new Set(
-    permissions.filter(p => p.is_granted).map(p => p.permission_key)
+  const permissionSet = useMemo(
+    () => new Set(permissions.filter(p => p.is_granted).map(p => p.permission_key)),
+    [permissions]
   );
 
-  /**
-   * Verifica se o usuário tem uma permissão específica.
-   * @param permissionKey - Ex: 'projetos.projeto.editar'
-   */
-  const can = (permissionKey: string): boolean => {
-    return permissionSet.has(permissionKey);
-  };
+  const can = useCallback(
+    (permissionKey: string): boolean => permissionSet.has(permissionKey),
+    [permissionSet]
+  );
 
-  /**
-   * Verifica se o usuário tem ALGUMA das permissões listadas.
-   */
-  const canAny = (keys: string[]): boolean => {
-    return keys.some(key => permissionSet.has(key));
-  };
+  const canAny = useCallback(
+    (keys: string[]): boolean => keys.some(key => permissionSet.has(key)),
+    [permissionSet]
+  );
 
-  /**
-   * Verifica se o usuário tem TODAS as permissões listadas.
-   */
-  const canAll = (keys: string[]): boolean => {
-    return keys.every(key => permissionSet.has(key));
-  };
+  const canAll = useCallback(
+    (keys: string[]): boolean => keys.every(key => permissionSet.has(key)),
+    [permissionSet]
+  );
 
-  /**
-   * Verifica se o usuário tem qualquer permissão no módulo.
-   * Usado para renderizar/ocultar módulos na navbar.
-   */
-  const canModule = (moduleCode: string): boolean => {
-    return permissions.some(p => p.module_code === moduleCode && p.is_granted);
-  };
+  const canModule = useCallback(
+    (moduleCode: string): boolean =>
+      permissions.some(p => p.module_code === moduleCode && p.is_granted),
+    [permissions]
+  );
 
-  /**
-   * Verifica se o usuário tem qualquer permissão no recurso.
-   */
-  const canResource = (moduleCode: string, resourceCode: string): boolean => {
-    return permissions.some(
-      p => p.module_code === moduleCode && p.resource_code === resourceCode && p.is_granted
-    );
-  };
+  const canResource = useCallback(
+    (moduleCode: string, resourceCode: string): boolean =>
+      permissions.some(
+        p => p.module_code === moduleCode && p.resource_code === resourceCode && p.is_granted
+      ),
+    [permissions]
+  );
 
   const loading = loadingPermissions || loadingModules;
+
+  const isGodModeValue = useMemo(() => checkGodMode(), [checkGodMode]);
 
   return {
     can,
@@ -125,6 +119,6 @@ export function usePermissions() {
     visibleModules,
     permissions,
     loading,
-    isGodMode: checkGodMode(),
+    isGodMode: isGodModeValue,
   };
 }
