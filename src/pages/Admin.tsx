@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +38,7 @@ interface UserWithRole {
 export default function Admin() {
   const navigate = useNavigate();
   const { user, loading, hasRole, isGodMode } = useAuth();
+  const { canModule } = usePermissions();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
@@ -54,14 +56,16 @@ export default function Admin() {
   const { data: rbacRoles = [] } = useRbacRoles();
   const rbacRolesCount = rbacRoles.filter(r => r.is_active).length;
 
+  const canAccessAdmin = hasRole('admin') || hasRole('super_admin') || canModule('admin');
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
     }
-    if (!loading && user && !hasRole('admin')) {
+    if (!loading && user && !canAccessAdmin) {
       navigate('/');
     }
-  }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loading, canAccessAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchUsers = async () => {
     // Get all profiles (including is_active which may not be in generated types yet)
@@ -119,7 +123,7 @@ export default function Admin() {
   };
 
   useEffect(() => {
-    if (user && hasRole('admin')) {
+    if (user && canAccessAdmin) {
       fetchUsers();
     }
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -249,7 +253,7 @@ export default function Admin() {
     );
   }
 
-  if (!hasRole('admin')) {
+  if (!canAccessAdmin) {
     return null;
   }
 
