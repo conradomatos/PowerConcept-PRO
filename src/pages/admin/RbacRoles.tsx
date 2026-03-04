@@ -28,7 +28,7 @@ import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
 export default function RbacRoles() {
   const navigate = useNavigate();
   const { hasRole } = useAuth();
-  const { can } = usePermissions();
+  const { can, isGodMode } = usePermissions();
   const { data: allRoles = [], isLoading } = useRbacRoles();
   // Ocultar god_mode da interface de gerenciamento
   const roles = allRoles.filter((r) => r.code !== 'god_mode');
@@ -91,10 +91,12 @@ export default function RbacRoles() {
             <h2 className="text-2xl font-semibold tracking-tight">Gerenciamento de Perfis</h2>
             <p className="text-muted-foreground">Configure perfis de acesso e suas permissões</p>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Perfil
-          </Button>
+          {isGodMode && (
+            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Novo Perfil
+            </Button>
+          )}
         </div>
 
         {/* Stats */}
@@ -194,25 +196,29 @@ export default function RbacRoles() {
                                 <Shield className="mr-2 h-4 w-4" />
                                 Permissões
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => { e.stopPropagation(); handleEdit(role); }}
-                                disabled={role.is_system}
-                              >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
+                              {isGodMode && (
+                                <DropdownMenuItem
+                                  onClick={(e) => { e.stopPropagation(); handleEdit(role); }}
+                                  disabled={role.is_system}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Editar
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleClone(role); }}>
                                 <Copy className="mr-2 h-4 w-4" />
                                 Clonar
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => { e.stopPropagation(); handleDelete(role); }}
-                                disabled={role.is_system}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Excluir
-                              </DropdownMenuItem>
+                              {isGodMode && (
+                                <DropdownMenuItem
+                                  onClick={(e) => { e.stopPropagation(); handleDelete(role); }}
+                                  disabled={role.is_system}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Excluir
+                                </DropdownMenuItem>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -243,6 +249,7 @@ export default function RbacRoles() {
           roleId={matrixRole.id}
           roleName={matrixRole.name}
           isSystem={matrixRole.is_system}
+          readOnly={!isGodMode}
           onClose={() => setMatrixRole(null)}
         />
       )}

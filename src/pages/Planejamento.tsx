@@ -467,6 +467,7 @@ export default function Planejamento() {
         // Find active default for this collaborator
         const activeDefaults = defaultAllocations.filter((d: any) => {
           if (d.colaborador_id !== col.id) return false;
+          if (!d.data_inicio) return false;
           const defStart = parseISO(d.data_inicio);
           const defEnd = d.data_fim ? parseISO(d.data_fim) : new Date('9999-12-31');
           // Check if default intersects with period
@@ -492,9 +493,9 @@ export default function Planejamento() {
         }
 
         // Determine block dates (clamped to period and collaborator employment)
-        const defStart = parseISO(def.data_inicio);
+        const defStart = def.data_inicio ? parseISO(def.data_inicio) : period.start;
         const defEnd = def.data_fim ? parseISO(def.data_fim) : period.end;
-        const hireDate = parseISO(col.hire_date);
+        const hireDate = col.hire_date ? parseISO(col.hire_date) : period.start;
         const termDate = col.termination_date ? parseISO(col.termination_date) : null;
 
         let blockStart = defStart < period.start ? period.start : defStart;
@@ -1050,6 +1051,7 @@ export default function Planejamento() {
             dataClicada={selectedDate}
             alocacoes={blocks.filter(b =>
               b.colaborador_id === selectedColaboradorId &&
+              b.data_inicio && b.data_fim &&
               parseISO(b.data_inicio) <= selectedDate &&
               parseISO(b.data_fim) >= selectedDate
             )}

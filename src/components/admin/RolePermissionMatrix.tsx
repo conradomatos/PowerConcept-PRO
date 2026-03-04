@@ -28,6 +28,7 @@ interface RolePermissionMatrixProps {
   roleName: string;
   isSystem: boolean;
   onClose: () => void;
+  readOnly?: boolean;
 }
 
 /** Nomes abreviados para as colunas de ações */
@@ -42,7 +43,8 @@ const ACTION_SHORT_NAMES: Record<string, string> = {
   configurar: 'Config.',
 };
 
-export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: RolePermissionMatrixProps) {
+export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose, readOnly }: RolePermissionMatrixProps) {
+  const isDisabled = isSystem || !!readOnly;
   const [search, setSearch] = useState('');
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
 
@@ -106,12 +108,12 @@ export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: Ro
   // Toggle individual
   const handleToggle = useCallback(
     (resourceId: string, actionId: string) => {
-      if (isSystem) return;
+      if (isDisabled) return;
       const permission = findPermission(resourceId, actionId);
       if (!permission) return;
       togglePermission.mutate({ roleId, permissionId: permission.id });
     },
-    [isSystem, findPermission, roleId, togglePermission]
+    [isDisabled, findPermission, roleId, togglePermission]
   );
 
   // Verificar se TODAS as permissões do módulo estão marcadas
@@ -150,7 +152,7 @@ export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: Ro
   // Toggle todas as permissões de um módulo
   const handleModuleToggle = useCallback(
     (moduleId: string) => {
-      if (isSystem) return;
+      if (isDisabled) return;
       const modResources = resourcesByModule.get(moduleId) || [];
       const permissionIds: string[] = [];
 
@@ -170,7 +172,7 @@ export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: Ro
         granted: !fullyGranted,
       });
     },
-    [isSystem, resourcesByModule, actions, allPermissions, isModuleFullyGranted, bulkToggle, roleId]
+    [isDisabled, resourcesByModule, actions, allPermissions, isModuleFullyGranted, bulkToggle, roleId]
   );
 
   // Toggle expandir módulo
@@ -207,8 +209,8 @@ export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: Ro
             )}
           </SheetTitle>
           <SheetDescription>
-            {isSystem
-              ? 'Perfil de sistema — permissões não podem ser alteradas.'
+            {isDisabled
+              ? 'Permissões em modo somente leitura.'
               : 'Marque as permissões que este perfil deve ter em cada módulo e recurso.'}
           </SheetDescription>
         </SheetHeader>
@@ -283,7 +285,7 @@ export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: Ro
                         <Checkbox
                           checked={fullyGranted ? true : partiallyGranted ? 'indeterminate' : false}
                           onCheckedChange={() => handleModuleToggle(module.id)}
-                          disabled={isSystem}
+                          disabled={isDisabled}
                           aria-label={`Toggle todas as permissões de ${module.name}`}
                         />
                       </div>
@@ -316,7 +318,7 @@ export function RolePermissionMatrix({ roleId, roleName, isSystem, onClose }: Ro
                                   <Checkbox
                                     checked={checked}
                                     onCheckedChange={() => handleToggle(resource.id, action.id)}
-                                    disabled={isSystem}
+                                    disabled={isDisabled}
                                     aria-label={`${resource.name} - ${action.name}`}
                                   />
                                 ) : (
