@@ -26,6 +26,7 @@ interface UserWithRole {
   email: string;
   full_name: string | null;
   roles: AppRole[];
+  rbacProfile?: { name: string; code: string } | null;
   created_at?: string;
   is_active?: boolean;
 }
@@ -75,6 +76,23 @@ export default function Admin() {
     if (rolesError) {
     }
 
+    // Buscar perfis RBAC dos usuários
+    const { data: rbacAssignments } = await supabase
+      .from('rbac_user_roles')
+      .select('user_id, rbac_roles(id, name, code)')
+      .eq('is_active', true);
+
+    // Criar mapa user_id -> perfil RBAC
+    const rbacMap = new Map<string, { name: string; code: string }>();
+    if (rbacAssignments) {
+      for (const a of rbacAssignments) {
+        const role = (a as any).rbac_roles;
+        if (role && a.user_id) {
+          rbacMap.set(a.user_id, { name: role.name, code: role.code });
+        }
+      }
+    }
+
     // Combine profiles with their roles
     const usersData: UserWithRole[] = (profiles || []).map((profile) => ({
       id: profile.user_id,
@@ -83,6 +101,7 @@ export default function Admin() {
       roles: (roles || [])
         .filter((r) => r.user_id === profile.user_id)
         .map((r) => r.role),
+      rbacProfile: rbacMap.get(profile.user_id) || null,
       created_at: profile.created_at,
       is_active: (profile as { is_active?: boolean }).is_active !== false,
     }));
@@ -125,12 +144,10 @@ export default function Admin() {
 
   // All users from profiles table
   const allUsers = users;
-  // Users with roles assigned
-  void users.filter(u => u.roles.length > 0); // usersWithRoles
-  // Users without roles (pending activation)
-  const pendingUsers = users.filter(u => u.roles.length === 0);
-  // Active users (has roles AND is_active = true)
-  const activeUsers = users.filter(u => u.roles.length > 0 && u.is_active);
+  // Users without any profile (pending activation)
+  const pendingUsers = users.filter(u => !u.rbacProfile && u.roles.length === 0);
+  // Active users (has profile AND is_active = true)
+  const activeUsers = users.filter(u => (u.rbacProfile || u.roles.length > 0) && u.is_active);
 
   // Action handlers
   const handleEdit = (u: UserWithRole) => {
@@ -331,7 +348,7 @@ export default function Admin() {
                     <TableRow>
                       <TableHead>Email</TableHead>
                       <TableHead>Nome</TableHead>
-                      <TableHead>Papéis</TableHead>
+                      <TableHead>Perfil</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Criado em</TableHead>
                       <TableHead className="w-10"></TableHead>
@@ -343,32 +360,29 @@ export default function Admin() {
                         <TableCell className="font-medium">{u.email}</TableCell>
                         <TableCell>{u.full_name || '-'}</TableCell>
                         <TableCell>
-                          {u.roles.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {u.roles.map((role) => (
-                                <Badge
-                                  key={role}
-                                  variant={getRoleBadgeVariant(role)}
-                                >
-                                  {getRoleLabel(role)}
-                                </Badge>
-                              ))}
-                            </div>
+                          {u.rbacProfile ? (
+                            <Badge variant={u.rbacProfile.code === 'god_mode' ? 'destructive' : 'default'}>
+                              {u.rbacProfile.code === 'god_mode' ? '\u2605 ' : ''}{u.rbacProfile.name}
+                            </Badge>
+                          ) : u.roles.length > 0 ? (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              Legado: {u.roles.join(', ')}
+                            </Badge>
                           ) : (
-                            <span className="text-muted-foreground text-sm">Sem papéis</span>
+                            <span className="text-muted-foreground text-sm">Sem perfil</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          {u.roles.length === 0 ? (
+                          {!u.rbacProfile && u.roles.length === 0 ? (
                             <Badge variant="outline" className="bg-orange-500/20 text-orange-500 border-orange-500/50">
-                              Sem Papéis
+                              Sem Perfil
                             </Badge>
                           ) : u.is_active ? (
                             <Badge variant="outline" className="bg-green-500/20 text-green-500 border-green-500/50">
                               Ativo
                             </Badge>
                           ) : (
-                            <Badge variant="secondary">
+                            <Badge variant="outline" className="bg-red-500/20 text-red-500 border-red-500/50">
                               Inativo
                             </Badge>
                           )}

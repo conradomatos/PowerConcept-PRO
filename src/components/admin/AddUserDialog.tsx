@@ -4,16 +4,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Eye, EyeOff, RefreshCw, Loader2 } from 'lucide-react';
-import { Database } from '@/integrations/supabase/types';
-import { useRbacRoles, useAssignRoleToUser } from '@/hooks/useRbacAdmin';
-
-type AppRole = Database['public']['Enums']['app_role'];
+import { RefreshCw, Loader2 } from 'lucide-react';
+import { useRbacRoles } from '@/hooks/useRbacAdmin';
 
 interface AddUserDialogProps {
   open: boolean;
@@ -22,59 +17,31 @@ interface AddUserDialogProps {
   isGodMode: boolean;
 }
 
-const ALL_ROLES: { value: AppRole; label: string }[] = [
-  { value: 'super_admin', label: 'SUPER ADMIN' },
-  { value: 'admin', label: 'ADMIN' },
-  { value: 'rh', label: 'RH' },
-  { value: 'financeiro', label: 'FINANCEIRO' },
-];
-
-function generatePassword(): string {
-  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
-  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const numbers = '0123456789';
-  const symbols = '!@#$%&*';
-  const all = lowercase + uppercase + numbers + symbols;
-  
-  let password = '';
-  password += lowercase[Math.floor(Math.random() * lowercase.length)];
-  password += uppercase[Math.floor(Math.random() * uppercase.length)];
-  password += numbers[Math.floor(Math.random() * numbers.length)];
-  password += symbols[Math.floor(Math.random() * symbols.length)];
-  
-  for (let i = 4; i < 8; i++) {
-    password += all[Math.floor(Math.random() * all.length)];
-  }
-  
-  return password.split('').sort(() => Math.random() - 0.5).join('');
+function generatePin(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-function getPasswordStrength(password: string): { label: string; color: string; width: string } {
-  if (!password) return { label: '', color: 'bg-muted', width: '0%' };
-  
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (/[a-z]/.test(password)) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/[0-9]/.test(password)) score++;
-  if (/[^a-zA-Z0-9]/.test(password)) score++;
-  
-  if (score <= 2) return { label: 'Fraca', color: 'bg-red-500', width: '33%' };
-  if (score <= 4) return { label: 'Média', color: 'bg-amber-500', width: '66%' };
-  return { label: 'Forte', color: 'bg-green-500', width: '100%' };
+function generateUsername(fullName: string): string {
+  const clean = fullName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+  const parts = clean.split(/\s+/);
+  if (parts.length < 2) return parts[0] || 'usuario';
+  return `${parts[0]}.${parts[parts.length - 1]}`;
 }
 
 export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddUserDialogProps) {
   const [selectedColaborador, setSelectedColaborador] = useState<string>('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [selectedRoles, setSelectedRoles] = useState<AppRole[]>([]);
-  const [selectedRbacRoles, setSelectedRbacRoles] = useState<string[]>([]);
+  const [pin, setPin] = useState('');
+  const [selectedRbacRoleId, setSelectedRbacRoleId] = useState<string>('');
+  const [createNewCollaborator, setCreateNewCollaborator] = useState(false);
+  const [newCollaboratorData, setNewCollaboratorData] = useState({ full_name: '', cpf: '', phone: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: rbacRoles = [] } = useRbacRoles();
-  const assignRbacRole = useAssignRoleToUser();
 
   // Fetch collaborators that don't have a linked user
   const { data: colaboradores } = useQuery({
@@ -97,10 +64,10 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddU
     if (!open) {
       setSelectedColaborador('');
       setEmail('');
-      setPassword('');
-      setSelectedRoles([]);
-      setSelectedRbacRoles([]);
-      setShowPassword(false);
+      setPin('');
+      setSelectedRbacRoleId('');
+      setCreateNewCollaborator(false);
+      setNewCollaboratorData({ full_name: '', cpf: '', phone: '' });
     }
   }, [open]);
 
@@ -114,52 +81,78 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddU
     }
   }, [selectedColaborador, colaboradores]);
 
-  const handleRoleToggle = (role: AppRole) => {
-    setSelectedRoles(prev =>
-      prev.includes(role)
-        ? prev.filter(r => r !== role)
-        : [...prev, role]
-    );
-  };
-
-  const toggleRbacRole = (roleId: string) => {
-    setSelectedRbacRoles(prev =>
-      prev.includes(roleId)
-        ? prev.filter(id => id !== roleId)
-        : [...prev, roleId]
-    );
-  };
-
   const handleSubmit = async () => {
     // Validations
-    if (!selectedColaborador) {
-      toast.error('Selecione um funcionário');
-      return;
-    }
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       toast.error('Email inválido');
       return;
     }
-    if (password.length < 8) {
-      toast.error('A senha deve ter no mínimo 8 caracteres');
+    if (!/^\d{6}$/.test(pin)) {
+      toast.error('PIN deve ter exatamente 6 dígitos numéricos');
       return;
     }
-    if (selectedRoles.length === 0) {
-      toast.error('Selecione pelo menos um papel');
+    if (!selectedRbacRoleId) {
+      toast.error('Selecione um perfil de acesso');
       return;
     }
 
-    setIsSubmitting(true);
+    // Determine collaboratorId and fullName
+    let collaboratorId = selectedColaborador;
+    let fullName = '';
+
+    if (createNewCollaborator) {
+      if (!newCollaboratorData.full_name.trim()) {
+        toast.error('Nome completo é obrigatório');
+        return;
+      }
+      if (!newCollaboratorData.cpf.trim()) {
+        toast.error('CPF é obrigatório');
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      // Create collaborator inline
+      const { data: newCollab, error: collabError } = await supabase
+        .from('collaborators')
+        .insert({
+          full_name: newCollaboratorData.full_name.trim(),
+          cpf: newCollaboratorData.cpf.replace(/\D/g, ''),
+          phone: newCollaboratorData.phone.trim() || null,
+          status: 'ativo',
+        })
+        .select('id')
+        .single();
+
+      if (collabError) {
+        toast.error(collabError.message.includes('duplicate')
+          ? 'CPF já cadastrado'
+          : 'Erro ao criar colaborador');
+        setIsSubmitting(false);
+        return;
+      }
+      collaboratorId = newCollab.id;
+      fullName = newCollaboratorData.full_name.trim();
+    } else {
+      if (!selectedColaborador) {
+        toast.error('Selecione um colaborador ou crie um novo');
+        return;
+      }
+      fullName = colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '';
+      setIsSubmitting(true);
+    }
 
     try {
-      // Call edge function to create user securely
+      const username = generateUsername(fullName);
+
       const { data, error: invokeError } = await supabase.functions.invoke('create-user', {
         body: {
           email,
-          password,
-          fullName: colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '',
-          roles: selectedRoles,
-          collaboratorId: selectedColaborador,
+          password: pin,
+          fullName,
+          rbacRoleId: selectedRbacRoleId,
+          collaboratorId,
+          username,
         },
       });
 
@@ -173,63 +166,93 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddU
         return;
       }
 
-      // Atribuir perfis RBAC se selecionados
-      if (selectedRbacRoles.length > 0 && data?.userId) {
-        for (const roleId of selectedRbacRoles) {
-          try {
-            await assignRbacRole.mutateAsync({ userId: data.userId, roleId });
-          } catch {
-            // Erros individuais já tratados pelo mutation
-          }
-        }
-      }
-
       toast.success('Usuário criado com sucesso');
       onSuccess();
       onOpenChange(false);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao criar usuário');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const passwordStrength = getPasswordStrength(password);
-  const availableRoles = isGodMode ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'super_admin');
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Adicionar Novo Usuário</DialogTitle>
+          <DialogTitle>Novo Usuário</DialogTitle>
           <DialogDescription>
-            Crie um novo usuário vinculado a um funcionário existente
+            Crie um novo usuário vinculado a um colaborador
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Funcionário */}
+          {/* Colaborador */}
           <div className="space-y-2">
-            <Label htmlFor="colaborador">Funcionário *</Label>
-            <Select value={selectedColaborador} onValueChange={setSelectedColaborador}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um funcionário" />
-              </SelectTrigger>
-              <SelectContent>
-                {colaboradores?.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.full_name} - {c.cpf}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>Colaborador *</Label>
+            {!createNewCollaborator ? (
+              <>
+                <Select value={selectedColaborador} onValueChange={setSelectedColaborador}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um colaborador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {colaboradores?.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.full_name} - {c.cpf}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => { setCreateNewCollaborator(true); setSelectedColaborador(''); }}
+                >
+                  + Criar novo colaborador
+                </button>
+              </>
+            ) : (
+              <div className="space-y-3 rounded-md border p-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Nome completo *</Label>
+                  <Input
+                    value={newCollaboratorData.full_name}
+                    onChange={(e) => setNewCollaboratorData(prev => ({ ...prev, full_name: e.target.value }))}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">CPF *</Label>
+                  <Input
+                    value={newCollaboratorData.cpf}
+                    onChange={(e) => setNewCollaboratorData(prev => ({ ...prev, cpf: e.target.value }))}
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Celular</Label>
+                  <Input
+                    value={newCollaboratorData.phone}
+                    onChange={(e) => setNewCollaboratorData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="(00) 00000-0000"
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="text-xs text-primary hover:underline"
+                  onClick={() => { setCreateNewCollaborator(false); setNewCollaboratorData({ full_name: '', cpf: '', phone: '' }); }}
+                >
+                  &larr; Selecionar existente
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
+            <Label>Email *</Label>
             <Input
-              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -237,92 +260,53 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddU
             />
           </div>
 
-          {/* Senha */}
+          {/* PIN */}
           <div className="space-y-2">
-            <Label htmlFor="password">Senha *</Label>
+            <Label>PIN de Acesso *</Label>
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  className="pr-10"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </Button>
-              </div>
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={pin}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '');
+                  setPin(v.slice(0, 6));
+                }}
+                placeholder="000000"
+                className="font-mono text-lg tracking-[0.5em] text-center"
+              />
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                onClick={() => setPassword(generatePassword())}
-                title="Gerar senha"
+                onClick={() => setPin(generatePin())}
+                title="Gerar PIN"
               >
                 <RefreshCw className="h-4 w-4" />
               </Button>
             </div>
-            {password && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 flex-1 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full transition-all ${passwordStrength.color}`}
-                      style={{ width: passwordStrength.width }}
-                    />
-                  </div>
-                  <span className="text-xs text-muted-foreground">{passwordStrength.label}</span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Papéis (legado) */}
-          <div className="space-y-2">
-            <Label>Papéis *</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {availableRoles.map((role) => (
-                <div key={role.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`role-${role.value}`}
-                    checked={selectedRoles.includes(role.value)}
-                    onCheckedChange={() => handleRoleToggle(role.value)}
-                  />
-                  <Label htmlFor={`role-${role.value}`} className="text-sm font-normal cursor-pointer">
-                    {role.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Perfis RBAC */}
-          <div className="space-y-3 pt-4 border-t">
-            <Label className="text-sm font-medium">Perfis de Acesso (RBAC)</Label>
             <p className="text-xs text-muted-foreground">
-              Perfis granulares que controlam o acesso por módulo e ação.
+              6 dígitos numéricos. O usuário usará este PIN para fazer login.
             </p>
-            {rbacRoles.filter(r => r.is_active).map((role) => (
-              <div key={role.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`rbac-role-${role.id}`}
-                  checked={selectedRbacRoles.includes(role.id)}
-                  onCheckedChange={() => toggleRbacRole(role.id)}
-                />
-                <Label htmlFor={`rbac-role-${role.id}`} className="text-sm cursor-pointer">
-                  {role.name}
-                  {role.is_system && <Badge variant="outline" className="ml-2 text-[10px]">Sistema</Badge>}
-                </Label>
-              </div>
-            ))}
+          </div>
+
+          {/* Perfil RBAC */}
+          <div className="space-y-2">
+            <Label>Perfil de Acesso *</Label>
+            <Select value={selectedRbacRoleId} onValueChange={setSelectedRbacRoleId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o perfil" />
+              </SelectTrigger>
+              <SelectContent>
+                {rbacRoles.filter(r => r.is_active).map((role) => (
+                  <SelectItem key={role.id} value={role.id}>
+                    {role.code === 'god_mode' ? '\u2605 ' : ''}{role.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

@@ -17,7 +17,8 @@ function isValidEmail(email: string): boolean {
 }
 
 function isValidPassword(password: string): boolean {
-  return typeof password === 'string' && password.length >= 8 && password.length <= 128;
+  // Aceitar PIN de 6 dígitos OU senha tradicional (retrocompatibilidade)
+  return typeof password === 'string' && password.length >= 6 && password.length <= 128;
 }
 
 function isValidUUID(id: string): boolean {
@@ -48,6 +49,18 @@ function sanitizeErrorMessage(error: unknown): string {
   return 'Erro ao processar requisição';
 }
 
+// Mapeamento RBAC → legado para compatibilidade
+const RBAC_TO_LEGACY: Record<string, string[]> = {
+  'god_mode': ['super_admin', 'admin'],
+  'diretor': ['admin'],
+  'gerente_projetos': ['admin'],
+  'administrativo_rh': ['rh'],
+  'financeiro': ['financeiro'],
+  'engenheiro_campo': ['admin'],
+  'operador_frotas': ['admin'],
+  'consultor_externo': ['admin'],
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -72,7 +85,7 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } }
     })
-    
+
     const { data: { user: callerUser } } = await userClient.auth.getUser()
     if (!callerUser) {
       return new Response(
@@ -81,24 +94,45 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verificar se é admin
+    // Verificar se é admin (RBAC OU legado)
     const { data: callerRoles } = await userClient
       .from('user_roles')
       .select('role')
       .eq('user_id', callerUser.id)
-    
-    const isAdmin = callerRoles?.some(r => 
+
+    const { data: callerRbac } = await userClient
+      .from('rbac_user_roles')
+      .select('rbac_roles(code)')
+      .eq('user_id', callerUser.id)
+      .eq('is_active', true)
+
+    const isAdminLegacy = callerRoles?.some(r =>
       r.role === 'admin' || r.role === 'super_admin'
     )
-    if (!isAdmin) {
+    const isAdminRbac = callerRbac?.some((r: any) =>
+      ['god_mode', 'diretor', 'gerente_projetos'].includes(r.rbac_roles?.code)
+    )
+
+    if (!isAdminLegacy && !isAdminRbac) {
       return new Response(
         JSON.stringify({ error: 'Apenas administradores podem criar usuários' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
+    const isGodMode = callerRoles?.some(r => r.role === 'super_admin') ||
+      callerRbac?.some((r: any) => r.rbac_roles?.code === 'god_mode')
+
     // Parse and validate input
-    let body: { email?: string; password?: string; fullName?: string; roles?: string[]; collaboratorId?: string };
+    let body: {
+      email?: string;
+      password?: string;
+      fullName?: string;
+      rbacRoleId?: string;
+      roles?: string[];
+      collaboratorId?: string;
+      username?: string;
+    };
     try {
       body = await req.json()
     } catch {
@@ -108,7 +142,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { email, password, fullName, roles, collaboratorId } = body;
+    const { email, password, fullName, rbacRoleId, roles, collaboratorId, username } = body;
 
     // Validate email
     if (!email || !isValidEmail(email)) {
@@ -121,7 +155,7 @@ Deno.serve(async (req) => {
     // Validate password
     if (!password || !isValidPassword(password)) {
       return new Response(
-        JSON.stringify({ error: 'Senha deve ter entre 8 e 128 caracteres' }),
+        JSON.stringify({ error: 'PIN deve ter no mínimo 6 caracteres' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -134,19 +168,29 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Validate roles
-    if (!roles || !Array.isArray(roles) || roles.length === 0) {
+    // Roles legado agora é opcional (se rbacRoleId fornecido)
+    if (!rbacRoleId && (!roles || !Array.isArray(roles) || roles.length === 0)) {
       return new Response(
-        JSON.stringify({ error: 'Pelo menos um papel é obrigatório' }),
+        JSON.stringify({ error: 'Perfil de acesso é obrigatório' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Validate each role value
-    const invalidRoles = roles.filter(r => !isValidRole(r));
-    if (invalidRoles.length > 0) {
+    // Se roles legado fornecido, validar
+    if (roles && roles.length > 0) {
+      const invalidRoles = roles.filter(r => !isValidRole(r));
+      if (invalidRoles.length > 0) {
+        return new Response(
+          JSON.stringify({ error: 'Papel inválido' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
+    // Validar rbacRoleId se fornecido
+    if (rbacRoleId && !isValidUUID(rbacRoleId)) {
       return new Response(
-        JSON.stringify({ error: 'Papel inválido' }),
+        JSON.stringify({ error: 'ID de perfil inválido' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -159,19 +203,34 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Verificar se SUPER_ADMIN só pode ser atribuído por SUPER_ADMIN
-    const isSuperAdmin = callerRoles?.some(r => r.role === 'super_admin')
-    if (roles.includes('super_admin') && !isSuperAdmin) {
+    // Cliente admin para operações privilegiadas
+    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    })
+
+    // God Mode só pode ser atribuído por God Mode
+    if (rbacRoleId) {
+      const { data: targetRole } = await adminClient
+        .from('rbac_roles')
+        .select('code')
+        .eq('id', rbacRoleId)
+        .single()
+
+      if (targetRole?.code === 'god_mode' && !isGodMode) {
+        return new Response(
+          JSON.stringify({ error: 'Apenas God Mode pode atribuir God Mode a outros usuários' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
+    // Verificar super_admin legado só pode ser atribuído por super_admin/god_mode
+    if (roles?.includes('super_admin') && !isGodMode) {
       return new Response(
         JSON.stringify({ error: 'Apenas Super Admins podem criar outros Super Admins' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
-
-    // Cliente admin para operações privilegiadas
-    const adminClient = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
 
     // 1. Criar usuário via Admin API (não faz login)
     console.log(`Creating user with email: ${email}`)
@@ -200,16 +259,53 @@ Deno.serve(async (req) => {
     const userId = newUser.user.id
     console.log(`User created with ID: ${userId}`)
 
-    // 2. Inserir roles
-    for (const role of roles) {
-      console.log(`Inserting role ${role} for user ${userId}`)
-      const { error: roleError } = await adminClient
-        .from('user_roles')
-        .insert({ user_id: userId, role })
-      
-      if (roleError) {
-        console.error(`Error inserting role ${role}:`, roleError)
-        // Continue with other roles even if one fails
+    // 2. Inserir perfil RBAC + roles legado de compatibilidade
+    if (rbacRoleId) {
+      console.log(`Inserting RBAC role ${rbacRoleId} for user ${userId}`)
+      const { error: rbacError } = await adminClient
+        .from('rbac_user_roles')
+        .insert({
+          user_id: userId,
+          role_id: rbacRoleId,
+          assigned_by: callerUser.id,
+          is_active: true,
+        })
+
+      if (rbacError) {
+        console.error('Error inserting RBAC role:', rbacError)
+      }
+
+      // Mapeamento RBAC → legado para compatibilidade
+      const { data: roleData } = await adminClient
+        .from('rbac_roles')
+        .select('code')
+        .eq('id', rbacRoleId)
+        .single()
+
+      if (roleData?.code) {
+        const legacyRoles = RBAC_TO_LEGACY[roleData.code] || ['admin']
+        for (const role of legacyRoles) {
+          const { error: legacyError } = await adminClient
+            .from('user_roles')
+            .insert({ user_id: userId, role })
+
+          if (legacyError) {
+            console.error(`Error inserting legacy role ${role}:`, legacyError)
+          }
+        }
+      }
+    }
+
+    // Se roles legado foram passados diretamente (sem rbacRoleId), inserir normalmente
+    if (roles && roles.length > 0 && !rbacRoleId) {
+      for (const role of roles) {
+        console.log(`Inserting legacy role ${role} for user ${userId}`)
+        const { error: roleError } = await adminClient
+          .from('user_roles')
+          .insert({ user_id: userId, role })
+        if (roleError) {
+          console.error(`Error inserting role ${role}:`, roleError)
+        }
       }
     }
 
@@ -220,10 +316,22 @@ Deno.serve(async (req) => {
         .from('collaborators')
         .update({ user_id: userId })
         .eq('id', collaboratorId)
-      
+
       if (linkError) {
         console.error('Error linking collaborator:', linkError)
-        // User is created, just log the error
+      }
+    }
+
+    // 4. Atualizar username em profiles (se fornecido)
+    if (username) {
+      console.log(`Setting username '${username}' for user ${userId}`)
+      const { error: usernameError } = await adminClient
+        .from('profiles')
+        .update({ username })
+        .eq('user_id', userId)
+
+      if (usernameError) {
+        console.error('Error setting username:', usernameError)
       }
     }
 
