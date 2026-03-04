@@ -205,6 +205,11 @@ export default function CollaboratorForm({
       toast.error('Data de admissão é obrigatória');
       return false;
     }
+    // Telefone obrigatório
+    if (!formData.phone.trim() || formData.phone.replace(/\D/g, '').length < 10) {
+      toast.error('Telefone é obrigatório (mínimo 10 dígitos)');
+      return false;
+    }
     return true;
   };
 
@@ -524,7 +529,7 @@ export default function CollaboratorForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="phone">Telefone</Label>
+          <Label htmlFor="phone">Telefone *</Label>
           <Input
             id="phone"
             value={formData.phone}
