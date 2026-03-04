@@ -122,7 +122,7 @@ export default function Admin() {
     if (user && hasRole('admin')) {
       fetchUsers();
     }
-  }, [user, hasRole]);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getRoleBadgeVariant = (role: AppRole): "default" | "secondary" | "outline" | "destructive" => {
     switch (role) {
