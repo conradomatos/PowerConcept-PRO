@@ -30,7 +30,9 @@ export function ResetPasswordDialog({ open, onOpenChange, user, onSuccess }: Res
   const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setPin(generatePin());
+    } else {
       setPin('');
     }
   }, [open]);

@@ -182,7 +182,7 @@ export function CreateRoleDialog({ open, onOpenChange, editingRole, onSuccess }:
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Nenhum (perfil vazio)</SelectItem>
-                  {roles.map((role) => (
+                  {roles.filter(r => r.code !== 'god_mode').map((role) => (
                     <SelectItem key={role.id} value={role.id}>
                       {role.name}
                     </SelectItem>
