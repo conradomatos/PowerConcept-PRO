@@ -29,7 +29,9 @@ export default function RbacRoles() {
   const navigate = useNavigate();
   const { hasRole } = useAuth();
   const { can } = usePermissions();
-  const { data: roles = [], isLoading } = useRbacRoles();
+  const { data: allRoles = [], isLoading } = useRbacRoles();
+  // Ocultar god_mode da interface de gerenciamento
+  const roles = allRoles.filter((r) => r.code !== 'god_mode');
   const deleteRole = useDeleteRole();
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, ShieldCheck, AlertTriangle, Plus } from 'lucide-react';
+import { Loader2, ShieldCheck, Plus } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import {
   useRbacRoles,
@@ -58,12 +58,11 @@ export function ManageRbacRolesDialog({ open, onOpenChange, user, onSuccess }: M
     }
   }, [userRoles]);
 
-  // Filtrar apenas roles ativos
-  const activeRoles = allRoles.filter((r) => r.is_active);
+  // Filtrar apenas roles ativos e ocultar god_mode da interface
+  const activeRoles = allRoles.filter((r) => r.is_active && r.code !== 'god_mode');
 
-  // Encontrar o role selecionado para verificar se é god_mode
+  // Encontrar o role selecionado
   const selectedRole = activeRoles.find((r) => r.id === selectedRoleId);
-  const isGodModeSelected = selectedRole?.code === 'god_mode';
 
   const handleSave = async () => {
     if (!user) return;
@@ -177,7 +176,7 @@ export function ManageRbacRolesDialog({ open, onOpenChange, user, onSuccess }: M
             </ScrollArea>
           )}
 
-          {selectedRoleId && !isGodModeSelected && (
+          {selectedRoleId && (
             <Button
               variant="outline"
               className="w-full gap-2"
@@ -186,16 +185,6 @@ export function ManageRbacRolesDialog({ open, onOpenChange, user, onSuccess }: M
               <ShieldCheck className="h-4 w-4" />
               Editar Permissões deste Perfil
             </Button>
-          )}
-
-          {/* God Mode warning */}
-          {isGodModeSelected && (
-            <div className="flex items-start gap-2 p-3 rounded-md bg-yellow-500/10 border border-yellow-500/30 text-yellow-500">
-              <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <p className="text-xs">
-                <strong>God Mode</strong> concede acesso total ao sistema, incluindo gerenciamento de todos os perfis e permissões. Atribua apenas a administradores de confiança.
-              </p>
-            </div>
           )}
 
           <DialogFooter>
