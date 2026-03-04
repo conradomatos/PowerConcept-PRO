@@ -161,8 +161,33 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddU
         return;
       }
 
-      if (data?.error) {
-        toast.error(data.error);
+      // Call edge function to create user securely
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            fullName: colaboradores?.find(c => c.id === selectedColaborador)?.full_name || '',
+            roles: selectedRoles,
+            collaboratorId: selectedColaborador,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        if (result.error?.includes('already registered') || result.error?.includes('already been registered')) {
+          toast.error('Este email já está cadastrado');
+        } else {
+          toast.error(result.error || 'Erro ao criar usuário');
+        }
         return;
       }
 
