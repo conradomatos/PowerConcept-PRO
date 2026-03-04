@@ -152,23 +152,35 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddU
         },
       });
 
-      // O SDK pode retornar erro em invokeError OU em data.error
-      // Quando verify_jwt=false, o comportamento varia
+      // Parse response — SDK pode retornar data como string ou objeto
+      // IMPORTANTE: Com verify_jwt=false, o SDK pode popular invokeError
+      // mesmo quando a EF retorna 200. Por isso checamos success PRIMEIRO.
       let result: any = data;
       if (typeof data === 'string') {
-        try { result = JSON.parse(data); } catch { result = data; }
+        try { result = JSON.parse(data); } catch { result = { _raw: data }; }
       }
 
-      if (invokeError) {
-        toast.error(result?.error || 'Erro ao criar usuário');
+      // Se a EF retornou success, IGNORAR invokeError (bug do SDK com verify_jwt=false)
+      if (result?.success || result?.userId) {
+        toast.success('Usuário criado com sucesso!');
+        onSuccess();
+        onOpenChange(false);
         return;
       }
 
+      // Se a EF retornou erro explícito
       if (result?.error) {
         toast.error(result.error);
         return;
       }
 
+      // Fallback: invokeError sem success na response
+      if (invokeError) {
+        toast.error('Erro ao criar usuário');
+        return;
+      }
+
+      // Nenhum indicador claro — assumir sucesso (a EF retornou 200 sem body parseável)
       toast.success('Usuário criado com sucesso!');
       onSuccess();
       onOpenChange(false);
