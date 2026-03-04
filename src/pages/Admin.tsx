@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { UserPlus, Users, UserCheck, Clock, Shield } from 'lucide-react';
+import { UserPlus, Users, UserCheck, Clock, Shield, ShieldCheck } from 'lucide-react';
 import { Database } from '@/integrations/supabase/types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,6 +18,8 @@ import { ManageRbacRolesDialog } from '@/components/admin/ManageRbacRolesDialog'
 import { ResetPasswordDialog } from '@/components/admin/ResetPasswordDialog';
 import { UserActionsMenu } from '@/components/admin/UserActionsMenu';
 import { ConfirmDialog } from '@/components/admin/ConfirmDialog';
+import { RolePermissionMatrix } from '@/components/admin/RolePermissionMatrix';
+import { useRbacRoles } from '@/hooks/useRbacAdmin';
 
 type AppRole = Database['public']['Enums']['app_role'];
 
@@ -27,7 +29,7 @@ interface UserWithRole {
   full_name: string | null;
   username?: string | null;
   roles: AppRole[];
-  rbacProfile?: { name: string; code: string } | null;
+  rbacProfile?: { id: string; name: string; code: string } | null;
   created_at?: string;
   is_active?: boolean;
 }
@@ -47,6 +49,10 @@ export default function Admin() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [permissionMatrixOpen, setPermissionMatrixOpen] = useState(false);
+
+  const { data: rbacRoles = [] } = useRbacRoles();
+  const rbacRolesCount = rbacRoles.filter(r => r.is_active).length;
 
   useEffect(() => {
     if (!loading && !user) {
@@ -84,12 +90,12 @@ export default function Admin() {
       .eq('is_active', true);
 
     // Criar mapa user_id -> perfil RBAC
-    const rbacMap = new Map<string, { name: string; code: string }>();
+    const rbacMap = new Map<string, { id: string; name: string; code: string }>();
     if (rbacAssignments) {
       for (const a of rbacAssignments) {
         const role = (a as any).rbac_roles;
         if (role && a.user_id) {
-          rbacMap.set(a.user_id, { name: role.name, code: role.code });
+          rbacMap.set(a.user_id, { id: role.id, name: role.name, code: role.code });
         }
       }
     }
@@ -262,7 +268,7 @@ export default function Admin() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total de Usuários</CardTitle>
@@ -288,6 +294,16 @@ export default function Admin() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-500">{pendingUsers.length}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Perfis Criados</CardTitle>
+              <Shield className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{rbacRolesCount}</div>
+              <p className="text-xs text-muted-foreground">perfis de acesso</p>
             </CardContent>
           </Card>
         </div>
@@ -324,6 +340,7 @@ export default function Admin() {
                       <TableHead>Nome</TableHead>
                       <TableHead>Username</TableHead>
                       <TableHead>Perfil</TableHead>
+                      <TableHead>Permissões</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Criado em</TableHead>
                       <TableHead className="w-10"></TableHead>
@@ -346,6 +363,24 @@ export default function Admin() {
                             </Badge>
                           ) : (
                             <span className="text-muted-foreground text-sm">Sem perfil</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {u.rbacProfile ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 px-2 text-xs gap-1"
+                              onClick={() => {
+                                setSelectedUser(u);
+                                setPermissionMatrixOpen(true);
+                              }}
+                            >
+                              <ShieldCheck className="h-3 w-3" />
+                              Ver permissões
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">—</span>
                           )}
                         </TableCell>
                         <TableCell>
@@ -442,6 +477,15 @@ export default function Admin() {
         isLoading={actionLoading}
         onConfirm={confirmDelete}
       />
+
+      {permissionMatrixOpen && selectedUser?.rbacProfile && (
+        <RolePermissionMatrix
+          roleId={selectedUser.rbacProfile.id}
+          roleName={selectedUser.rbacProfile.name}
+          isSystem={false}
+          onClose={() => setPermissionMatrixOpen(false)}
+        />
+      )}
     </Layout>
   );
 }

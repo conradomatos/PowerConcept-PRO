@@ -206,14 +206,14 @@ export default function Layout({ children }: LayoutProps) {
                   <span className="text-sm text-muted-foreground hidden sm:block truncate max-w-[180px]">
                     {user?.email}
                   </span>
-                  {(userRbacRole || roles.length > 0) && (
+                  {userRbacRole && (
                     <span className={cn(
                       "text-xs px-2 py-1 rounded font-medium",
                       userRbacRole?.code === 'god_mode'
                         ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
                         : "bg-secondary text-secondary-foreground"
                     )}>
-                      {userRbacRole?.code === 'god_mode' ? '\u2605 GOD MODE' : (userRbacRole?.name || roles[0]?.toUpperCase())}
+                      {userRbacRole?.code === 'god_mode' ? '\u2605 GOD MODE' : userRbacRole?.name}
                     </span>
                   )}
                   
