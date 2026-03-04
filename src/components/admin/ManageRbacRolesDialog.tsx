@@ -50,9 +50,12 @@ export function ManageRbacRolesDialog({ open, onOpenChange, user, onSuccess }: M
   const [permissionSheetOpen, setPermissionSheetOpen] = useState(false);
 
   // Popular com role atual do usuário quando os dados carregam
+  // Para usuários legados (sem RBAC) → selectedRoleId fica null, permitindo selecionar novo perfil
   useEffect(() => {
     if (userRoles && userRoles.length > 0) {
-      setSelectedRoleId(userRoles[0].role_id);
+      // Ignorar god_mode — se era o role atual, tratar como se não tivesse perfil
+      const visibleRole = userRoles.find((ur) => ur.role_code !== 'god_mode');
+      setSelectedRoleId(visibleRole ? visibleRole.role_id : null);
     } else {
       setSelectedRoleId(null);
     }
