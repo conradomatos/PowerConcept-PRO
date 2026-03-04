@@ -32,7 +32,7 @@ interface UserWithRole {
 
 export default function Admin() {
   const navigate = useNavigate();
-  const { user, loading, hasRole, isSuperAdmin } = useAuth();
+  const { user, loading, hasRole, isGodMode } = useAuth();
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
 
@@ -380,7 +380,7 @@ export default function Admin() {
                           <UserActionsMenu
                             user={u}
                             currentUserId={user?.id}
-                            isSuperAdmin={isSuperAdmin()}
+                            isGodMode={isGodMode()}
                             onEdit={handleEdit}
                             onManageRoles={handleManageRoles}
                             onResetPassword={handleResetPassword}
@@ -403,7 +403,7 @@ export default function Admin() {
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onSuccess={fetchUsers}
-        isSuperAdmin={isSuperAdmin()}
+        isGodMode={isGodMode()}
       />
 
       <EditUserDialog

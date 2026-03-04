@@ -22,7 +22,7 @@ interface ManageRolesDialogProps {
   onOpenChange: (open: boolean) => void;
   user: UserWithRole | null;
   onSuccess: () => void;
-  isSuperAdmin: boolean;
+  isGodMode: boolean;
 }
 
 const ALL_ROLES: { value: AppRole; label: string }[] = [
@@ -32,7 +32,7 @@ const ALL_ROLES: { value: AppRole; label: string }[] = [
   { value: 'financeiro', label: 'FINANCEIRO' },
 ];
 
-export function ManageRolesDialog({ open, onOpenChange, user, onSuccess, isSuperAdmin }: ManageRolesDialogProps) {
+export function ManageRolesDialog({ open, onOpenChange, user, onSuccess, isGodMode }: ManageRolesDialogProps) {
   const [selectedRoles, setSelectedRoles] = useState<AppRole[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -91,7 +91,7 @@ export function ManageRolesDialog({ open, onOpenChange, user, onSuccess, isSuper
     }
   };
 
-  const availableRoles = isSuperAdmin ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'super_admin');
+  const availableRoles = isGodMode ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'super_admin');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

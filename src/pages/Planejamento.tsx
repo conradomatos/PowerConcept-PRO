@@ -84,7 +84,7 @@ interface Collaborator {
 }
 
 export default function Planejamento() {
-  const { loading: authLoading, user, hasAnyRole, isSuperAdmin } = useAuth();
+  const { loading: authLoading, user, hasAnyRole, isGodMode } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -968,7 +968,7 @@ export default function Planejamento() {
                   onMoveBlock={handleMoveBlock}
                   onResizeBlock={handleResizeBlock}
                   viewMode={viewMode}
-                  canDeleteRealized={isSuperAdmin()}
+                  canDeleteRealized={isGodMode()}
                 />
               </div>
             )}
@@ -1001,7 +1001,7 @@ export default function Planejamento() {
                     onMoveBlock={handleMoveBlock}
                     onResizeBlock={handleResizeBlock}
                     viewMode={viewMode}
-                    canDeleteRealized={isSuperAdmin()}
+                    canDeleteRealized={isGodMode()}
                   />
                 </CollapsibleContent>
               </Collapsible>
@@ -1057,7 +1057,7 @@ export default function Planejamento() {
             onSuccess={() => {
               queryClient.invalidateQueries({ queryKey: ['alocacoes-blocos'] });
             }}
-            canDeleteRealized={isSuperAdmin()}
+            canDeleteRealized={isGodMode()}
           />
         )}
 

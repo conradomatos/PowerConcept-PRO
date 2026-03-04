@@ -32,7 +32,7 @@ interface VisibleModule {
 }
 
 export function usePermissions() {
-  const { user } = useAuth();
+  const { user, isGodMode: checkGodMode } = useAuth();
 
   const { data: permissions = [], isLoading: loadingPermissions } = useQuery({
     queryKey: ['rbac-permissions', user?.id],
@@ -125,5 +125,6 @@ export function usePermissions() {
     visibleModules,
     permissions,
     loading,
+    isGodMode: checkGodMode(),
   };
 }

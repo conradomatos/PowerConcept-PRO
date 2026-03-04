@@ -17,9 +17,9 @@ export default function CatalogoMateriais() {
   const [regiaoId, setRegiaoId] = useState<string | null>(null);
   
   const { items } = useMaterialCatalog();
-  const { hasRole, isSuperAdmin } = useAuth();
+  const { hasRole, isGodMode } = useAuth();
 
-  const canImport = hasRole('admin') || hasRole('financeiro') || isSuperAdmin();
+  const canImport = hasRole('admin') || hasRole('financeiro') || isGodMode();
 
   const handleImportSuccess = () => {
     // Grid will auto-refresh via react-query

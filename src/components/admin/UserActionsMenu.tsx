@@ -17,7 +17,7 @@ interface UserWithRole {
 interface UserActionsMenuProps {
   user: UserWithRole;
   currentUserId: string | undefined;
-  isSuperAdmin: boolean;
+  isGodMode: boolean;
   onEdit: (user: UserWithRole) => void;
   onManageRoles: (user: UserWithRole) => void;
   onResetPassword: (user: UserWithRole) => void;
@@ -28,7 +28,7 @@ interface UserActionsMenuProps {
 export function UserActionsMenu({
   user,
   currentUserId,
-  isSuperAdmin,
+  isGodMode,
   onEdit,
   onManageRoles,
   onResetPassword,
@@ -39,8 +39,8 @@ export function UserActionsMenu({
   const userIsSuperAdmin = user.roles.includes('super_admin');
   
   // Cannot modify self or super_admin (unless you are super_admin)
-  const canModify = !isCurrentUser && (isSuperAdmin || !userIsSuperAdmin);
-  const canDelete = !isCurrentUser && (isSuperAdmin || !userIsSuperAdmin);
+  const canModify = !isCurrentUser && (isGodMode || !userIsSuperAdmin);
+  const canDelete = !isCurrentUser && (isGodMode || !userIsSuperAdmin);
 
   return (
     <DropdownMenu>

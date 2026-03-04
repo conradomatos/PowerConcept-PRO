@@ -93,7 +93,7 @@ export default function Home() {
     );
   }
 
-  const userName = profile?.full_name || user?.email?.split('@')[0] || 'Usuário';
+  const userName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
   const firstName = userName.split(' ')[0];
 
   const shortcuts = [
@@ -161,7 +161,7 @@ export default function Home() {
         </div>
 
         {/* Pending Alert - Conditional */}
-        {pendingCount && pendingCount > 0 && (
+        {typeof pendingCount === 'number' && pendingCount > 0 && (
           <Card 
             className="border-amber-500/50 bg-amber-500/10 cursor-pointer hover:bg-amber-500/20 transition-colors"
             onClick={() => navigate('/dashboard')}

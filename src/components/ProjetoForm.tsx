@@ -38,14 +38,14 @@ interface ProjetoFormProps {
 const RESERVED_NAMES = ['ORÇAMENTOS'];
 
 export default function ProjetoForm({ open, onOpenChange, projeto, onSuccess }: ProjetoFormProps) {
-  const { isSuperAdmin, user } = useAuth();
+  const { isGodMode, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [clienteComboOpen, setClienteComboOpen] = useState(false);
   const [clienteFormOpen, setClienteFormOpen] = useState(false);
   const [dataInicioOpen, setDataInicioOpen] = useState(false);
   const [dataFimOpen, setDataFimOpen] = useState(false);
 
-  const canApprove = isSuperAdmin();
+  const canApprove = isGodMode();
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -182,7 +182,7 @@ export default function ProjetoForm({ open, onOpenChange, projeto, onSuccess }: 
         };
         
         // Only include OS in update if user is super_admin and it was changed
-        if (isSuperAdmin() && formData.os !== projeto.os) {
+        if (isGodMode() && formData.os !== projeto.os) {
           updateData.os = formData.os.trim();
         }
 
@@ -292,7 +292,7 @@ export default function ProjetoForm({ open, onOpenChange, projeto, onSuccess }: 
               <div className="space-y-2">
                 <Label htmlFor="os" className="flex items-center gap-2">
                   OS (Ordem de Serviço)
-                  {(!isSuperAdmin() || isSystemProject) && (
+                  {(!isGodMode() || isSystemProject) && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -309,8 +309,8 @@ export default function ProjetoForm({ open, onOpenChange, projeto, onSuccess }: 
                   id="os"
                   value={formData.os}
                   onChange={(e) => setFormData({ ...formData, os: e.target.value })}
-                  disabled={!isSuperAdmin() || isSystemProject}
-                  className={cn((!isSuperAdmin() || isSystemProject) && "bg-muted cursor-not-allowed")}
+                  disabled={!isGodMode() || isSystemProject}
+                  className={cn((!isGodMode() || isSystemProject) && "bg-muted cursor-not-allowed")}
                 />
               </div>
             )}

@@ -33,7 +33,7 @@ export default function OrcamentoDetail() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isSuperAdmin, loading: authLoading } = useAuth();
+  const { isGodMode, loading: authLoading } = useAuth();
 
   const [selectedRevisionId, setSelectedRevisionId] = useState<string | undefined>();
 
@@ -83,8 +83,8 @@ export default function OrcamentoDetail() {
   const { summary } = useBudgetSummary(selectedRevision?.id);
   const { createProject } = useCreateProjectFromBudget();
 
-  const canManage = isSuperAdmin();
-  const canApprove = isSuperAdmin();
+  const canManage = isGodMode();
+  const canApprove = isGodMode();
 
   // Handle revision change from dropdown
   const handleRevisionChange = (id: string) => {
@@ -136,7 +136,7 @@ export default function OrcamentoDetail() {
   };
 
   // Only super_admin can access this page - check after all hooks
-  if (!authLoading && !isSuperAdmin()) {
+  if (!authLoading && !isGodMode()) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-12 text-center">

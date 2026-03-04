@@ -9,12 +9,12 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   roles: AppRole[];
+  rbacRoleCodes: string[];
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   hasAnyRole: () => boolean;
-  isSuperAdmin: () => boolean;
+  isGodMode: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [rbacRoleCodes, setRbacRoleCodes] = useState<string[]>([]);
 
   const fetchRoles = async (userId: string) => {
     const { data, error } = await supabase
@@ -38,6 +39,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const fetchRbacRoles = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('rbac_user_roles')
+      .select('role_id, rbac_roles(code)')
+      .eq('user_id', userId)
+      .eq('is_active', true);
+
+    if (!error && data) {
+      const codes = data
+        .map((r: any) => r.rbac_roles?.code)
+        .filter(Boolean) as string[];
+      setRbacRoleCodes(codes);
+    } else {
+      setRbacRoleCodes([]);
+    }
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
@@ -48,9 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           setTimeout(() => {
             fetchRoles(session.user.id);
+            fetchRbacRoles(session.user.id);
           }, 0);
         } else {
           setRoles([]);
+          setRbacRoleCodes([]);
         }
       }
     );
@@ -62,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (session?.user) {
         fetchRoles(session.user.id);
+        fetchRbacRoles(session.user.id);
       }
     });
 
@@ -73,27 +94,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error as Error | null };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: { full_name: fullName },
-      },
-    });
-    return { error: error as Error | null };
-  };
-
   const signOut = async () => {
     await supabase.auth.signOut();
     setRoles([]);
+    setRbacRoleCodes([]);
   };
 
   const hasRole = (role: AppRole) => roles.includes(role);
-  const hasAnyRole = () => roles.length > 0;
-  const isSuperAdmin = () => roles.includes('super_admin');
+  const hasAnyRole = () => roles.length > 0 || rbacRoleCodes.length > 0;
+  const isGodMode = () => rbacRoleCodes.includes('god_mode') || roles.includes('super_admin');
 
   return (
     <AuthContext.Provider
@@ -102,12 +111,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         loading,
         roles,
+        rbacRoleCodes,
         signIn,
-        signUp,
         signOut,
         hasRole,
         hasAnyRole,
-        isSuperAdmin,
+        isGodMode,
       }}
     >
       {children}

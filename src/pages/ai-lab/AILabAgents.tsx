@@ -21,8 +21,8 @@ import {
 
 export default function AILabAgents() {
   const { agents, loading, updateAgent, deleteAgent, duplicateAgent } = useAIAgents();
-  const { hasRole, isSuperAdmin } = useAuth();
-  const isAdmin = hasRole('admin') || isSuperAdmin();
+  const { hasRole, isGodMode } = useAuth();
+  const isAdmin = hasRole('admin') || isGodMode();
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);

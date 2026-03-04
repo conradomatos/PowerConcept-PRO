@@ -49,7 +49,7 @@ import type { BudgetFormData, BudgetWithRelations, RevisionStatus } from '@/lib/
 
 export default function OrcamentosList() {
   const navigate = useNavigate();
-  const { isSuperAdmin, loading } = useAuth();
+  const { isGodMode, loading } = useAuth();
   const { budgets, isLoading, createBudget, updateBudget, deleteBudget, duplicateBudget } = useBudgets();
 
   const [search, setSearch] = useState('');
@@ -57,7 +57,7 @@ export default function OrcamentosList() {
   const [editingBudget, setEditingBudget] = useState<BudgetWithRelations | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const canManage = isSuperAdmin();
+  const canManage = isGodMode();
 
   // Filter budgets - hook must be called unconditionally
   const filteredBudgets = useMemo(() => {
@@ -102,7 +102,7 @@ export default function OrcamentosList() {
   };
 
   // Only super_admin can access this page - check after all hooks
-  if (!loading && !isSuperAdmin()) {
+  if (!loading && !isGodMode()) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-12 text-center">

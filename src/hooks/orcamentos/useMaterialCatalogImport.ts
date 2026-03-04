@@ -82,7 +82,7 @@ export interface DuplicateInfo {
 }
 
 export function useMaterialCatalogImport() {
-  const { user, hasRole, isSuperAdmin } = useAuth();
+  const { user, hasRole, isGodMode } = useAuth();
   const queryClient = useQueryClient();
   const [isProcessing, setIsProcessing] = useState(false);
   const [preview, setPreview] = useState<ImportPreviewRow[]>([]);
@@ -93,10 +93,10 @@ export function useMaterialCatalogImport() {
   const [headers, setHeaders] = useState<string[]>([]);
 
   // Check if user can import (admin, financeiro, or super_admin)
-  const canImport = hasRole('admin') || hasRole('financeiro') || isSuperAdmin();
+  const canImport = hasRole('admin') || hasRole('financeiro') || isGodMode();
   
   // Check if user can do full update (only super_admin)
-  const canFullUpdate = isSuperAdmin();
+  const canFullUpdate = isGodMode();
 
   // Auto-detect column mapping based on headers
   const detectColumnMapping = useCallback((headerRow: string[]): Partial<ColumnMapping> => {

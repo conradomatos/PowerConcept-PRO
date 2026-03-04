@@ -51,7 +51,7 @@ export function MaterialVariantsDrawer({
   catalogCodigo,
   catalogDescricao,
 }: MaterialVariantsDrawerProps) {
-  const { hasRole, isSuperAdmin } = useAuth();
+  const { hasRole, isGodMode } = useAuth();
   const { variants, isLoading, createVariant, updateVariant, deleteVariant } = useMaterialVariants(catalogId);
   
   const [showAddForm, setShowAddForm] = useState(false);
@@ -65,7 +65,7 @@ export function MaterialVariantsDrawer({
   const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
 
-  const canEditPrice = hasRole('admin') || hasRole('financeiro') || isSuperAdmin();
+  const canEditPrice = hasRole('admin') || hasRole('financeiro') || isGodMode();
 
   // Fetch price history for selected variant
   const { data: priceHistory = [] } = useQuery({
@@ -224,7 +224,7 @@ export function MaterialVariantsDrawer({
                             >
                               <History className="h-3.5 w-3.5 text-muted-foreground" />
                             </Button>
-                            {isSuperAdmin() && (
+                            {isGodMode() && (
                               <Button
                                 variant="ghost"
                                 size="icon"

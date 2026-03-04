@@ -5,10 +5,10 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function BasesGlobaisLayout() {
   const navigate = useNavigate();
-  const { isSuperAdmin, loading } = useAuth();
+  const { isGodMode, loading } = useAuth();
 
   // Only super_admin can access this page
-  if (!loading && !isSuperAdmin()) {
+  if (!loading && !isGodMode()) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center py-12 text-center">

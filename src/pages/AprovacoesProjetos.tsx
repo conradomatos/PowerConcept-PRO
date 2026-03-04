@@ -45,14 +45,14 @@ type ProjetoWithEmpresa = Projeto & {
 };
 
 export default function AprovacoesProjetos() {
-  const { hasRole, isSuperAdmin, user } = useAuth();
+  const { hasRole, isGodMode, user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedProjeto, setSelectedProjeto] = useState<ProjetoWithEmpresa | null>(null);
   const [actionType, setActionType] = useState<'aprovar' | 'reprovar' | 'view' | null>(null);
   const [motivoReprovacao, setMotivoReprovacao] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const canApprove = hasRole('admin') || isSuperAdmin();
+  const canApprove = hasRole('admin') || isGodMode();
 
   const { data: projetosPendentes, isLoading } = useQuery({
     queryKey: ['projetos-pendentes'],

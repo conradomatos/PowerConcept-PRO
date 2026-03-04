@@ -19,7 +19,7 @@ interface AddUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  isSuperAdmin: boolean;
+  isGodMode: boolean;
 }
 
 const ALL_ROLES: { value: AppRole; label: string }[] = [
@@ -64,7 +64,7 @@ function getPasswordStrength(password: string): { label: string; color: string; 
   return { label: 'Forte', color: 'bg-green-500', width: '100%' };
 }
 
-export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: AddUserDialogProps) {
+export function AddUserDialog({ open, onOpenChange, onSuccess, isGodMode }: AddUserDialogProps) {
   const [selectedColaborador, setSelectedColaborador] = useState<string>('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -212,7 +212,7 @@ export function AddUserDialog({ open, onOpenChange, onSuccess, isSuperAdmin }: A
   };
 
   const passwordStrength = getPasswordStrength(password);
-  const availableRoles = isSuperAdmin ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'super_admin');
+  const availableRoles = isGodMode ? ALL_ROLES : ALL_ROLES.filter(r => r.value !== 'super_admin');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
