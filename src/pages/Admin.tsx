@@ -61,7 +61,7 @@ export default function Admin() {
     if (!loading && user && !hasRole('admin')) {
       navigate('/');
     }
-  }, [user, loading, navigate, hasRole]);
+  }, [user, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchUsers = async () => {
     // Get all profiles (including is_active which may not be in generated types yet)
