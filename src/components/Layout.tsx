@@ -84,6 +84,8 @@ export default function Layout({ children }: LayoutProps) {
 
   const { data: userRbacRole } = useQuery({
     queryKey: ['user-rbac-display', user?.id],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       if (!user?.id) return null;
       const { data } = await supabase

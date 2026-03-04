@@ -57,34 +57,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // 1. Carrega sessão inicial
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+      if (session?.user) {
+        fetchRoles(session.user.id);
+        fetchRbacRoles(session.user.id);
+      }
+    });
+
+    // 2. Escuta apenas mudanças reais (login, logout, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
+        if (event === 'INITIAL_SESSION') return; // já tratado acima
+
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
 
         if (session?.user) {
-          setTimeout(() => {
-            fetchRoles(session.user.id);
-            fetchRbacRoles(session.user.id);
-          }, 0);
+          fetchRoles(session.user.id);
+          fetchRbacRoles(session.user.id);
         } else {
           setRoles([]);
           setRbacRoleCodes([]);
         }
       }
     );
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (session?.user) {
-        fetchRoles(session.user.id);
-        fetchRbacRoles(session.user.id);
-      }
-    });
 
     return () => subscription.unsubscribe();
   }, []);

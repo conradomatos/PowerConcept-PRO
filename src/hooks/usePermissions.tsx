@@ -110,7 +110,7 @@ export function usePermissions() {
 
   const isGodModeValue = useMemo(() => checkGodMode(), [checkGodMode]);
 
-  return {
+  return useMemo(() => ({
     can,
     canAny,
     canAll,
@@ -120,5 +120,5 @@ export function usePermissions() {
     permissions,
     loading,
     isGodMode: isGodModeValue,
-  };
+  }), [can, canAny, canAll, canModule, canResource, visibleModules, permissions, loading, isGodModeValue]);
 }
