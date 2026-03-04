@@ -17,7 +17,7 @@ import {
   Brain,
   Truck,
 } from 'lucide-react';
-import logoCps from '@/assets/logo-cps.png';
+import logoConcept from '@/assets/logo-concept.png';
 import { cn } from '@/lib/utils';
 import {
   SidebarProvider,
@@ -194,14 +194,11 @@ export default function Layout({ children }: LayoutProps) {
                 </nav>
                 
                 {/* Brand - Right side */}
-                <Link 
-                  to="/" 
+                <Link
+                  to="/"
                   className="ml-auto flex items-center gap-3 hover:opacity-80 transition-opacity"
                 >
-                  <img src={logoCps} alt="CPS" className="h-8 w-auto" />
-                  <h1 className="text-lg font-medium tracking-[0.25em] uppercase text-foreground">
-                    CPS
-                  </h1>
+                  <img src={logoConcept} alt="Concept" className="h-8 w-auto" />
                 </Link>
                 
                 <div className="flex items-center gap-3">

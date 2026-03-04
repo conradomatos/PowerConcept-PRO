@@ -47,12 +47,14 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
 import { NavLink } from '@/components/NavLink';
+import logoConcept from '@/assets/logo-concept.png';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { NavigationArea } from './Layout';
 
@@ -220,6 +222,15 @@ export function AppSidebar({ activeArea }: AppSidebarProps) {
   if (isOrcamentosArea) {
     return (
       <Sidebar collapsible="icon">
+        <SidebarHeader className="flex items-center justify-center px-3 py-4">
+          <div className="transition-all duration-200">
+            {collapsed ? (
+              <img src={logoConcept} alt="Concept" className="h-8 w-8 object-contain" />
+            ) : (
+              <img src={logoConcept} alt="Concept" className="h-8 w-auto" />
+            )}
+          </div>
+        </SidebarHeader>
         <SidebarContent className="pt-4">
           {/* Main navigation */}
           <SidebarGroup>
@@ -354,6 +365,15 @@ export function AppSidebar({ activeArea }: AppSidebarProps) {
 
   return (
     <Sidebar collapsible="icon">
+      <SidebarHeader className="flex items-center justify-center px-3 py-4">
+        <div className="transition-all duration-200">
+          {collapsed ? (
+            <img src={logoConcept} alt="Concept" className="h-8 w-8 object-contain" />
+          ) : (
+            <img src={logoConcept} alt="Concept" className="h-8 w-auto" />
+          )}
+        </div>
+      </SidebarHeader>
       <SidebarContent className="pt-4">
         <SidebarGroup>
           <SidebarGroupLabel>{currentAreaConfig.label}</SidebarGroupLabel>

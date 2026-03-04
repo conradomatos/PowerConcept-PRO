@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import logoConcept from '@/assets/logo-concept.png';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -134,9 +135,9 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-semibold tracking-tight">
-            PowerConcept
-          </CardTitle>
+          <div className="flex flex-col items-center gap-2">
+            <img src={logoConcept} alt="Concept" className="h-12 w-auto" />
+          </div>
           <CardDescription>Gestão de Projetos e Portfólio</CardDescription>
         </CardHeader>
         <CardContent>
