@@ -85,6 +85,8 @@ export interface RbacUserRole {
 export function useRbacRoles() {
   return useQuery({
     queryKey: ['rbac-roles'],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data: roles, error } = await supabase
         .from('rbac_roles')
@@ -207,6 +209,8 @@ export function useRolePermissions(roleId: string | null) {
 export function useUserRbacRoles(userId: string | null) {
   return useQuery({
     queryKey: ['rbac-user-roles', userId],
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     queryFn: async () => {
       if (!userId) return [];
       const { data, error } = await supabase
