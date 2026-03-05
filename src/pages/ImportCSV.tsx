@@ -12,6 +12,8 @@ import { validateCPF, cleanCPF } from '@/lib/cpf';
 import { Upload, FileText, CheckCircle2, XCircle, AlertCircle, Download } from 'lucide-react';
 import { useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface PreviewRow {
   row: number;
@@ -26,6 +28,7 @@ interface PreviewRow {
     status: string;
     email: string;
     phone: string;
+    equipe: string;
     // Campos opcionais de custo
     classificacao: string;
     salario_base: number | null;
@@ -151,7 +154,11 @@ export default function ImportCSV() {
       email: getString(row['email']) || '',
       phone: getString(row['telefone']) || getString(row['phone']) || '',
       // Cost fields (optional)
-      classificacao: classificacaoRaw.toUpperCase() === 'PJ' ? 'PJ' : (classificacaoRaw.toUpperCase() === 'CLT' ? 'CLT' : ''),
+      equipe: getString(row['equipe']) || getString(row['team']) || '',
+      classificacao: (() => {
+        const classUpper = classificacaoRaw.toUpperCase();
+        return classUpper === 'PJ' ? 'PJ' : classUpper === 'TERCEIRO' ? 'TERCEIRO' : classUpper === 'CLT' ? 'CLT' : '';
+      })(),
       salario_base: parseNumber(salarioRaw),
       beneficios: parseNumber(beneficiosRaw),
       periculosidade: parseBoolean(periculosidadeRaw),
@@ -281,11 +288,12 @@ export default function ImportCSV() {
         desligamento: '',
         cargo: 'Analista',
         departamento: 'TI',
+        equipe: 'Equipe A',
         status: 'ativo',
         email: 'joao@email.com',
         telefone: '11999999999',
         classificacao: 'CLT',
-        salario: 5000,
+        salario_base: 5000,
         beneficios: 800,
         periculosidade: 'Não',
       },
@@ -297,11 +305,12 @@ export default function ImportCSV() {
         desligamento: '',
         cargo: 'Gerente',
         departamento: 'RH',
+        equipe: 'Equipe B',
         status: 'ativo',
         email: 'maria@email.com',
         telefone: '11888888888',
         classificacao: 'PJ',
-        salario: 12000,
+        salario_base: 12000,
         beneficios: '',
         periculosidade: '',
       },
@@ -318,11 +327,12 @@ export default function ImportCSV() {
       { wch: 12 }, // desligamento
       { wch: 15 }, // cargo
       { wch: 15 }, // departamento
+      { wch: 15 }, // equipe
       { wch: 10 }, // status
       { wch: 25 }, // email
       { wch: 15 }, // telefone
       { wch: 12 }, // classificacao
-      { wch: 12 }, // salario
+      { wch: 12 }, // salario_base
       { wch: 12 }, // beneficios
       { wch: 14 }, // periculosidade
     ];
@@ -354,6 +364,7 @@ export default function ImportCSV() {
         termination_date: row.data.termination_date || null,
         position: row.data.position || null,
         department: row.data.department || null,
+        equipe: row.data.equipe || null,
         status: row.data.status as 'ativo' | 'afastado' | 'desligado',
         email: row.data.email || null,
         phone: row.data.phone || null,
@@ -376,7 +387,7 @@ export default function ImportCSV() {
             periculosidade: row.data.periculosidade,
             inicio_vigencia: row.data.hire_date,
             motivo_alteracao: 'Importação inicial',
-            observacao: 'Criado via importação de planilha',
+            observacao: `Importado em lote em ${format(new Date(), 'dd/MM/yyyy', { locale: ptBR })}`,
             created_by: user?.id,
             updated_by: user?.id,
           });
@@ -398,6 +409,11 @@ export default function ImportCSV() {
         message += ` ${costSuccess} com custos.`;
       }
       toast.success(message);
+
+      const semCusto = success - costSuccess;
+      if (semCusto > 0) {
+        toast.warning(`${semCusto} colaboradores importados sem custo cadastrado. Complete em Recursos > Custos de Pessoal > Vigência de Salário.`);
+      }
     }
     if (errors > 0) {
       toast.error(`${errors} registro(s) com erro (CPF duplicado?)`);
@@ -453,8 +469,8 @@ export default function ImportCSV() {
           <CardContent>
             <div className="text-sm text-muted-foreground space-y-2">
               <p><strong>Obrigatórias:</strong> nome (ou nome_completo), cpf, admissao (ou data_admissao)</p>
-              <p><strong>Opcionais:</strong> nascimento, desligamento, cargo, departamento, status, email, telefone</p>
-              <p><strong>Custos (opcional):</strong> classificacao (CLT/PJ), salario (ou salario_base), beneficios, periculosidade (Sim/Não)</p>
+              <p><strong>Opcionais:</strong> nascimento, desligamento, cargo, departamento, equipe, status, email, telefone</p>
+              <p><strong>Custos (opcional):</strong> classificacao (CLT/PJ/TERCEIRO), salario_base (ou salario), beneficios, periculosidade (Sim/Não)</p>
               <p><strong>Status válidos:</strong> ativo, afastado, desligado (padrão: ativo)</p>
             </div>
           </CardContent>

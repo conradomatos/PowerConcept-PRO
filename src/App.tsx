@@ -20,6 +20,8 @@ import CollaboratorDefaults from "./pages/CollaboratorDefaults";
 import CustosProjeto from "./pages/CustosProjeto";
 import AprovacoesProjetos from "./pages/AprovacoesProjetos";
 import CustosPessoal from "./pages/CustosPessoal";
+import VigenciaSalario from "./pages/VigenciaSalario";
+import PadroesAlocacao from "./pages/PadroesAlocacao";
 import Rentabilidade from "./pages/Rentabilidade";
 import RentabilidadeProjeto from "./pages/RentabilidadeProjeto";
 import MapeamentoOmie from "./pages/MapeamentoOmie";
@@ -103,6 +105,8 @@ const App = () => (
             <Route path="/planejamento" element={<Planejamento />} />
             <Route path="/custos-projeto" element={<CustosProjeto />} />
             <Route path="/recursos/custos" element={<CustosPessoal />} />
+            <Route path="/recursos/custos/vigencia" element={<VigenciaSalario />} />
+            <Route path="/recursos/custos/alocacao" element={<PadroesAlocacao />} />
             <Route path="/rentabilidade" element={<Rentabilidade />} />
             <Route path="/rentabilidade/mapeamento" element={<MapeamentoOmie />} />
             <Route path="/rentabilidade/receitas" element={<ReceitasConferencia />} />

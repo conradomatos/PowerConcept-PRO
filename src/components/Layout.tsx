@@ -40,6 +40,8 @@ const routeToArea: Record<string, NavigationArea> = {
   // Recursos
   '/collaborators': 'recursos',
   '/recursos/custos': 'recursos',
+  '/recursos/custos/vigencia': 'recursos',
+  '/recursos/custos/alocacao': 'recursos',
   '/import': 'recursos',
   // Projetos
   '/empresas': 'projetos',

@@ -65,6 +65,8 @@ type NavItem = {
   roles?: ('admin' | 'rh' | 'financeiro' | 'super_admin')[];
   /** Permission key do RBAC — quando definida, tem prioridade sobre roles */
   permission?: string;
+  /** Subitens para renderizar como Collapsible */
+  children?: NavItem[];
 };
 
 type AreaConfig = {
@@ -84,7 +86,14 @@ const areaNavItems: Record<NavigationArea, AreaConfig> = {
     label: 'Recursos',
     items: [
       { title: 'Colaboradores', url: '/collaborators', icon: Users, permission: 'recursos.colaboradores.visualizar' },
-      { title: 'Custos de Pessoal', url: '/recursos/custos', icon: DollarSign, permission: 'recursos.custos_pessoal.visualizar', roles: ['admin', 'rh', 'financeiro', 'super_admin'] },
+      {
+        title: 'Custos de Pessoal', url: '', icon: DollarSign, permission: 'recursos.custos_pessoal.visualizar', roles: ['admin', 'rh', 'financeiro', 'super_admin'],
+        children: [
+          { title: 'Visão Geral', url: '/recursos/custos', icon: Eye },
+          { title: 'Vigência de Salário', url: '/recursos/custos/vigencia', icon: DollarSign },
+          { title: 'Padrões de Alocação', url: '/recursos/custos/alocacao', icon: Users },
+        ],
+      },
       { title: 'Importar Colaboradores', url: '/import', icon: FileSpreadsheet, permission: 'recursos.importacao.importar', roles: ['admin', 'rh'] },
     ],
   },
@@ -379,24 +388,71 @@ export function AppSidebar({ activeArea }: AppSidebarProps) {
           <SidebarGroupLabel>{currentAreaConfig.label}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleItems.map((item) => (
-                <SidebarMenuItem key={item.url}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <NavLink
-                      to={item.url}
-                      className="flex items-center gap-2"
-                      activeClassName="bg-accent text-accent-foreground"
+              {visibleItems.map((item) => {
+                if (item.children && item.children.length > 0) {
+                  const isChildActive = item.children.some((child) => location.pathname === child.url);
+                  return (
+                    <SidebarMenuItem key={item.title}>
+                      <Collapsible defaultOpen={isChildActive}>
+                        <CollapsibleTrigger className="w-full">
+                          <SidebarMenuButton tooltip={item.title}>
+                            <div className="flex items-center gap-2 w-full">
+                              <item.icon className="h-4 w-4 shrink-0" />
+                              {!collapsed && (
+                                <>
+                                  <span className="flex-1 text-left">{item.title}</span>
+                                  <ChevronDown className="h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                                </>
+                              )}
+                            </div>
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <SidebarMenu className="ml-4 border-l border-border pl-2 mt-1">
+                            {item.children.map((child) => (
+                              <SidebarMenuItem key={child.url}>
+                                <SidebarMenuButton
+                                  asChild
+                                  isActive={isActive(child.url)}
+                                  tooltip={child.title}
+                                >
+                                  <NavLink
+                                    to={child.url}
+                                    className="flex items-center gap-2"
+                                    activeClassName="bg-accent text-accent-foreground"
+                                  >
+                                    <child.icon className="h-4 w-4 shrink-0" />
+                                    {!collapsed && <span>{child.title}</span>}
+                                  </NavLink>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                          </SidebarMenu>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    </SidebarMenuItem>
+                  );
+                }
+
+                return (
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                      tooltip={item.title}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      <NavLink
+                        to={item.url}
+                        className="flex items-center gap-2"
+                        activeClassName="bg-accent text-accent-foreground"
+                      >
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

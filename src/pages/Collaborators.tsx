@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { formatCPF } from '@/lib/cpf';
 import { Plus, Search, Pencil, Eye, DollarSign, Target } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -223,39 +224,55 @@ export default function Collaborators() {
                         <TableCell>{getStatusBadge(collaborator.status)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleView(collaborator)}
-                              title="Ver detalhes"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/collaborators/${collaborator.id}/costs`)}
-                              title="Custos"
-                            >
-                              <DollarSign className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => navigate(`/collaborators/${collaborator.id}/defaults`)}
-                              title="Projetos Padrão"
-                            >
-                              <Target className="h-4 w-4" />
-                            </Button>
+                            <Tooltip delayDuration={300}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleView(collaborator)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Ver detalhes</p></TooltipContent>
+                            </Tooltip>
+                            <Tooltip delayDuration={300}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/collaborators/${collaborator.id}/costs`)}
+                                >
+                                  <DollarSign className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Vigencia Salarial</p></TooltipContent>
+                            </Tooltip>
+                            <Tooltip delayDuration={300}>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => navigate(`/collaborators/${collaborator.id}/defaults`)}
+                                >
+                                  <Target className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent><p>Padroes de Alocacao</p></TooltipContent>
+                            </Tooltip>
                             {canEdit && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(collaborator)}
-                                title="Editar"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
+                              <Tooltip delayDuration={300}>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEdit(collaborator)}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent><p>Editar colaborador</p></TooltipContent>
+                              </Tooltip>
                             )}
                           </div>
                         </TableCell>
