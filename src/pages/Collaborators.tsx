@@ -160,7 +160,7 @@ export default function Collaborators() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] minw-filter">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -171,7 +171,7 @@ export default function Collaborators() {
             </SelectContent>
           </Select>
           <Select value={equipeFilter} onValueChange={setEquipeFilter}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] minw-filter">
               <SelectValue placeholder="Equipe" />
             </SelectTrigger>
             <SelectContent>

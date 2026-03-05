@@ -68,6 +68,13 @@
     --glow-primary: 42 92% 50%;
     --glow-accent: 42 92% 60%;
 
+    /* Status tokens */
+    --status-success-bg: 142 71% 45% / 0.15; --status-success-fg: 142 71% 35%; --status-success-border: 142 71% 45% / 0.3;
+    --status-warning-bg: 42 92% 50% / 0.15;  --status-warning-fg: 38 90% 35%;  --status-warning-border: 42 92% 50% / 0.3;
+    --status-error-bg: 0 72% 50% / 0.15;     --status-error-fg: 0 72% 40%;     --status-error-border: 0 72% 50% / 0.3;
+    --status-info-bg: 214 80% 50% / 0.15;    --status-info-fg: 214 80% 40%;    --status-info-border: 214 80% 50% / 0.3;
+    --status-pending-bg: 25 90% 50% / 0.15;  --status-pending-fg: 25 90% 35%;  --status-pending-border: 25 90% 50% / 0.3;
+
     /* Shadows */
     --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.03);
     --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.04);
@@ -82,11 +89,11 @@
   /* Dark Theme - XP Investments Style */
   .dark {
     /* Deep black background */
-    --background: 0 0% 4%;
+    --background: 0 0% 6%;
     --foreground: 0 0% 96%;
 
     /* Dark cards with subtle elevation */
-    --card: 0 0% 8%;
+    --card: 0 0% 9%;
     --card-foreground: 0 0% 96%;
 
     /* Popover slightly lighter */
@@ -119,7 +126,7 @@
     --ring: 42 92% 55%;
 
     /* Dark sidebar */
-    --sidebar-background: 0 0% 3%;
+    --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 0 0% 96%;
     --sidebar-primary: 42 92% 55%;
     --sidebar-primary-foreground: 0 0% 4%;
@@ -139,6 +146,13 @@
     --glow-primary: 42 92% 55%;
     --glow-accent: 42 92% 65%;
 
+    /* Status tokens — dark */
+    --status-success-bg: 142 71% 45% / 0.15; --status-success-fg: 142 71% 55%; --status-success-border: 142 71% 45% / 0.3;
+    --status-warning-bg: 42 92% 50% / 0.15;  --status-warning-fg: 42 92% 65%;  --status-warning-border: 42 92% 50% / 0.3;
+    --status-error-bg: 0 72% 55% / 0.15;     --status-error-fg: 0 72% 65%;     --status-error-border: 0 72% 55% / 0.3;
+    --status-info-bg: 214 80% 55% / 0.15;    --status-info-fg: 214 80% 70%;    --status-info-border: 214 80% 55% / 0.3;
+    --status-pending-bg: 25 90% 55% / 0.15;  --status-pending-fg: 25 90% 65%;  --status-pending-border: 25 90% 55% / 0.3;
+
     /* Dark shadows */
     --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.15);
     --shadow-xs: 0 1px 3px 0 hsl(0 0% 0% / 0.2);
@@ -148,6 +162,80 @@
     --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -4px hsl(0 0% 0% / 0.25);
     --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.3), 0 8px 10px -6px hsl(0 0% 0% / 0.25);
     --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.5);
+  }
+
+  /* ─── ENTERPRISE LIGHT ─────────────────────────────── */
+  :root[data-theme="enterprise"] {
+    --background: 220 20% 97%;
+    --foreground: 220 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+    --primary: 220 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 220 25% 25%;
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 15% 45%;
+    --accent: 220 70% 95%;
+    --accent-foreground: 220 70% 35%;
+    --destructive: 0 72% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 220 70% 45%;
+    --sidebar-background: 220 25% 18%;
+    --sidebar-foreground: 220 15% 90%;
+    --sidebar-primary: 220 70% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 25% 25%;
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 220 25% 25%;
+    --sidebar-ring: 220 70% 60%;
+    /* status vars — light */
+    --status-success-bg: 142 71% 45% / 0.12; --status-success-fg: 142 71% 30%; --status-success-border: 142 71% 45% / 0.25;
+    --status-warning-bg: 42 92% 50% / 0.12;  --status-warning-fg: 38 90% 30%;  --status-warning-border: 42 92% 50% / 0.25;
+    --status-error-bg: 0 72% 50% / 0.12;     --status-error-fg: 0 72% 35%;     --status-error-border: 0 72% 50% / 0.25;
+    --status-info-bg: 214 80% 50% / 0.12;    --status-info-fg: 214 80% 35%;    --status-info-border: 214 80% 50% / 0.25;
+    --status-pending-bg: 25 90% 50% / 0.12;  --status-pending-fg: 25 90% 30%;  --status-pending-border: 25 90% 50% / 0.25;
+  }
+
+  /* ─── GRAPHITE DARK ─────────────────────────────────── */
+  .dark[data-theme="graphite"] {
+    --background: 220 12% 10%;
+    --foreground: 220 10% 92%;
+    --card: 220 12% 14%;
+    --card-foreground: 220 10% 92%;
+    --popover: 220 12% 16%;
+    --popover-foreground: 220 10% 92%;
+    --primary: 42 85% 55%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 220 12% 20%;
+    --secondary-foreground: 220 10% 75%;
+    --muted: 220 12% 17%;
+    --muted-foreground: 220 10% 50%;
+    --accent: 220 12% 20%;
+    --accent-foreground: 42 85% 65%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 12% 20%;
+    --input: 220 12% 20%;
+    --ring: 42 85% 55%;
+    --sidebar-background: 220 14% 8%;
+    --sidebar-foreground: 220 10% 85%;
+    --sidebar-primary: 42 85% 55%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 220 14% 14%;
+    --sidebar-accent-foreground: 42 85% 65%;
+    --sidebar-border: 220 14% 18%;
+    --sidebar-ring: 42 85% 55%;
+    /* status vars — dark graphite (mesmo contraste que xp-dark) */
+    --status-success-bg: 142 71% 45% / 0.15; --status-success-fg: 142 71% 55%; --status-success-border: 142 71% 45% / 0.3;
+    --status-warning-bg: 42 85% 55% / 0.15;  --status-warning-fg: 42 85% 65%;  --status-warning-border: 42 85% 55% / 0.3;
+    --status-error-bg: 0 65% 55% / 0.15;     --status-error-fg: 0 65% 65%;     --status-error-border: 0 65% 55% / 0.3;
+    --status-info-bg: 214 80% 55% / 0.15;    --status-info-fg: 214 80% 70%;    --status-info-border: 214 80% 55% / 0.3;
+    --status-pending-bg: 25 90% 55% / 0.15;  --status-pending-fg: 25 90% 65%;  --status-pending-border: 25 90% 55% / 0.3;
   }
 }
 
@@ -159,31 +247,22 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-image: radial-gradient(
+      ellipse at top,
+      hsl(var(--primary) / 0.03) 0%,
+      transparent 60%
+    );
   }
 }
 
 /* XP-style utility classes */
 @layer utilities {
-  /* Status colors for badges and indicators */
-  .status-success {
-    @apply bg-green-500/15 text-green-400 border-green-500/30;
-  }
-  
-  .status-warning {
-    @apply bg-amber-500/15 text-amber-400 border-amber-500/30;
-  }
-  
-  .status-error {
-    @apply bg-red-500/15 text-red-400 border-red-500/30;
-  }
-  
-  .status-info {
-    @apply bg-blue-500/15 text-blue-400 border-blue-500/30;
-  }
-  
-  .status-pending {
-    @apply bg-orange-500/15 text-orange-400 border-orange-500/30;
-  }
+  /* Status tokens — definidos por tema em :root / .dark */
+  .status-success  { background-color: hsl(var(--status-success-bg));  color: hsl(var(--status-success-fg));  border-color: hsl(var(--status-success-border)); }
+  .status-warning  { background-color: hsl(var(--status-warning-bg));  color: hsl(var(--status-warning-fg));  border-color: hsl(var(--status-warning-border)); }
+  .status-error    { background-color: hsl(var(--status-error-bg));    color: hsl(var(--status-error-fg));    border-color: hsl(var(--status-error-border)); }
+  .status-info     { background-color: hsl(var(--status-info-bg));     color: hsl(var(--status-info-fg));     border-color: hsl(var(--status-info-border)); }
+  .status-pending  { background-color: hsl(var(--status-pending-bg));  color: hsl(var(--status-pending-fg));  border-color: hsl(var(--status-pending-border)); }
 
   /* Subtle glow for primary elements */
   .glow-primary {
@@ -242,8 +321,12 @@
   .table-row-hover {
     @apply transition-colors duration-150;
   }
-  
+
   .table-row-hover:hover {
     background: hsl(var(--muted) / 0.5);
   }
+
+  /* Min-width para evitar truncamento */
+  .minw-button { min-width: 120px; }
+  .minw-filter { min-width: 160px; }
 }

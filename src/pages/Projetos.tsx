@@ -299,7 +299,7 @@ export default function Projetos() {
           </div>
 
           <Select value={filterStatus} onValueChange={setFilterStatus}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[140px] minw-filter">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -312,7 +312,7 @@ export default function Projetos() {
           </Select>
 
           <Select value={filterAprovacao} onValueChange={setFilterAprovacao}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px] minw-filter">
               <SelectValue placeholder="Aprovação" />
             </SelectTrigger>
             <SelectContent>
@@ -325,7 +325,7 @@ export default function Projetos() {
           </Select>
 
           <Select value={filterTipoContrato} onValueChange={setFilterTipoContrato}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-[160px] minw-filter">
               <SelectValue placeholder="Tipo Contrato" />
             </SelectTrigger>
             <SelectContent>

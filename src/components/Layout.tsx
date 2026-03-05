@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import logoConcept from '@/assets/logo-concept.png';
 import { cn } from '@/lib/utils';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import {
   SidebarProvider,
   SidebarTrigger,
@@ -232,6 +233,7 @@ export default function Layout({ children }: LayoutProps) {
                     </Button>
                   )}
                   
+                  <ThemeSwitcher />
                   <Button variant="ghost" size="icon" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4" />
                   </Button>
