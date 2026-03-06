@@ -15,6 +15,7 @@ import Admin from "./pages/Admin";
 import CollaboratorCosts from "./pages/CollaboratorCosts";
 import Empresas from "./pages/Empresas";
 import Projetos from "./pages/Projetos";
+import ProjetoDetalhe from "./pages/ProjetoDetalhe";
 import Planejamento from "./pages/Planejamento";
 import CollaboratorDefaults from "./pages/CollaboratorDefaults";
 import CustosProjeto from "./pages/CustosProjeto";
@@ -93,6 +94,7 @@ const App = () => (
             <Route path="/collaborators" element={<Collaborators />} />
             <Route path="/empresas" element={<Empresas />} />
             <Route path="/projetos" element={<Projetos />} />
+            <Route path="/projetos/:id" element={<ProjetoDetalhe />} />
             <Route path="/import" element={<ImportCSV />} />
             <Route path="/import-apontamentos" element={<ImportApontamentos />} />
             <Route path="/apontamentos" element={<ApontamentosConsolidado />} />
