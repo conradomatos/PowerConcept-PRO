@@ -17,7 +17,6 @@ import {
   Brain,
   Truck,
 } from 'lucide-react';
-import logoConcept from '@/assets/logo-concept.png';
 import { cn } from '@/lib/utils';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import {
@@ -195,16 +194,8 @@ export default function Layout({ children }: LayoutProps) {
                     );
                   })}
                 </nav>
-                
-                {/* Brand - Right side */}
-                <Link
-                  to="/"
-                  className="ml-auto flex items-center gap-3 hover:opacity-80 transition-opacity"
-                >
-                  <img src={logoConcept} alt="Concept" className="h-8 w-auto" />
-                </Link>
-                
-                <div className="flex items-center gap-3">
+
+                <div className="ml-auto flex items-center gap-3">
                   <span className="text-sm text-muted-foreground hidden sm:block truncate max-w-[180px]">
                     {user?.email}
                   </span>
