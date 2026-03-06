@@ -9,10 +9,22 @@ import { useSecullumSync } from '@/hooks/useSecullumSync';
 import { RefreshCw, Loader2, CheckCircle2, XCircle, AlertCircle, Clock } from 'lucide-react';
 import { format, subDays, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import type { SecullumSyncEtapa } from '@/services/secullum/types';
+
+/** Labels das etapas para exibicao no progresso */
+const ETAPA_LABELS: Record<SecullumSyncEtapa, string> = {
+  FUNCIONARIOS: 'Funcionários',
+  FOTOS: 'Fotos',
+  AFASTAMENTOS: 'Afastamentos',
+  CALCULOS: 'Cálculos e Apontamentos',
+};
+
+/** Etapas executadas pelo orquestrador (sem FOTOS) */
+const ETAPAS_PADRAO: SecullumSyncEtapa[] = ['FUNCIONARIOS', 'AFASTAMENTOS', 'CALCULOS'];
 
 /**
- * Painel de sincronização manual com Secullum Ponto Web.
- * Exibe controles de sync + log de sincronizações anteriores.
+ * Painel de sincronizacao manual com Secullum Ponto Web.
+ * Exibe controles de sync com progresso por etapa + log de sincronizacoes anteriores.
  */
 export function SecullumSyncPanel() {
   const today = format(new Date(), 'yyyy-MM-dd');
@@ -21,7 +33,15 @@ export function SecullumSyncPanel() {
   const [dataInicio, setDataInicio] = useState(yesterday);
   const [dataFim, setDataFim] = useState(yesterday);
 
-  const { sync, isSyncing, lastSync, syncLogs, isLoadingLogs } = useSecullumSync();
+  const {
+    sync,
+    isSyncing,
+    etapaAtual,
+    etapasConcluidas,
+    lastSync,
+    syncLogs,
+    isLoadingLogs,
+  } = useSecullumSync();
 
   const handleSync = () => {
     sync({
@@ -84,8 +104,30 @@ export function SecullumSyncPanel() {
             </Button>
           </div>
 
+          {/* Progresso por etapa */}
+          {isSyncing && (
+            <div className="space-y-2 pt-2 border-t">
+              {ETAPAS_PADRAO.map((etapa) => {
+                const isConcluida = etapasConcluidas.includes(etapa);
+                const isAtual = etapaAtual === etapa;
+                const isPendente = !isConcluida && !isAtual;
+
+                return (
+                  <div key={etapa} className="flex items-center gap-2 text-sm">
+                    {isConcluida && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                    {isAtual && <Loader2 className="h-4 w-4 animate-spin text-blue-500" />}
+                    {isPendente && <Clock className="h-4 w-4 text-muted-foreground" />}
+                    <span className={isPendente ? 'text-muted-foreground' : isConcluida ? 'text-green-600 dark:text-green-400' : ''}>
+                      {ETAPA_LABELS[etapa]}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Último sync info */}
-          {lastSync && (
+          {lastSync && !isSyncing && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               Última sincronização:{' '}
@@ -118,7 +160,7 @@ export function SecullumSyncPanel() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Data/Hora</TableHead>
-                  <TableHead>Tipo</TableHead>
+                  <TableHead>Etapa</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Período</TableHead>
                   <TableHead className="text-right">Func.</TableHead>
@@ -137,7 +179,7 @@ export function SecullumSyncPanel() {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
-                        {log.tipo}
+                        {log.etapa || 'TODAS'}
                       </Badge>
                     </TableCell>
                     <TableCell>

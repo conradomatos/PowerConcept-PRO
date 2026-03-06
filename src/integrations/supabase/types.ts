@@ -6093,16 +6093,19 @@ export type Database = {
         Row: {
           id: string
           tipo: string
+          etapa: string | null
           status: string
           data_inicio: string | null
           data_fim: string | null
           funcionarios_sincronizados: number
           funcionarios_criados: number
           funcionarios_atualizados: number
+          funcionarios_ignorados: number
           calculos_sincronizados: number
           afastamentos_sincronizados: number
           fotos_sincronizadas: number
           apontamentos_criados: number
+          apontamentos_atualizados: number
           requests_utilizadas: number
           erro_mensagem: string | null
           erro_detalhes: unknown | null
@@ -6113,16 +6116,19 @@ export type Database = {
         Insert: {
           id?: string
           tipo: string
+          etapa?: string | null
           status: string
           data_inicio?: string | null
           data_fim?: string | null
           funcionarios_sincronizados?: number
           funcionarios_criados?: number
           funcionarios_atualizados?: number
+          funcionarios_ignorados?: number
           calculos_sincronizados?: number
           afastamentos_sincronizados?: number
           fotos_sincronizadas?: number
           apontamentos_criados?: number
+          apontamentos_atualizados?: number
           requests_utilizadas?: number
           erro_mensagem?: string | null
           erro_detalhes?: unknown | null
@@ -6133,16 +6139,19 @@ export type Database = {
         Update: {
           id?: string
           tipo?: string
+          etapa?: string | null
           status?: string
           data_inicio?: string | null
           data_fim?: string | null
           funcionarios_sincronizados?: number
           funcionarios_criados?: number
           funcionarios_atualizados?: number
+          funcionarios_ignorados?: number
           calculos_sincronizados?: number
           afastamentos_sincronizados?: number
           fotos_sincronizadas?: number
           apontamentos_criados?: number
+          apontamentos_atualizados?: number
           requests_utilizadas?: number
           erro_mensagem?: string | null
           erro_detalhes?: unknown | null

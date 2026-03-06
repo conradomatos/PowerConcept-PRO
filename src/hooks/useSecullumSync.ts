@@ -1,26 +1,51 @@
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { syncSecullum } from '@/services/secullum/sync';
-import type { SecullumSyncParams, SecullumSyncLog } from '@/services/secullum/types';
+import { syncSecullumCompleto } from '@/services/secullum/sync';
+import type { SecullumSyncParams, SecullumSyncLog, SecullumSyncEtapa } from '@/services/secullum/types';
+
+/** Labels das etapas para exibicao */
+const ETAPA_LABELS: Record<SecullumSyncEtapa, string> = {
+  FUNCIONARIOS: 'Funcionários',
+  FOTOS: 'Fotos',
+  AFASTAMENTOS: 'Afastamentos',
+  CALCULOS: 'Cálculos',
+};
 
 /**
- * Hook para sincronização com Secullum Ponto Web.
- * Gerencia estado de sync, invoca Edge Function, invalida queries relevantes.
+ * Hook para sincronizacao com Secullum Ponto Web.
+ * Orquestra 3 etapas sequenciais com progresso por etapa.
  */
 export function useSecullumSync() {
   const queryClient = useQueryClient();
+  const [etapaAtual, setEtapaAtual] = useState<SecullumSyncEtapa | null>(null);
+  const [etapasConcluidas, setEtapasConcluidas] = useState<SecullumSyncEtapa[]>([]);
 
-  /** Dispara sincronização */
+  /** Dispara sincronizacao completa (3 etapas) */
   const syncMutation = useMutation({
-    mutationFn: async (params: SecullumSyncParams) => {
-      const result = await syncSecullum(params);
+    mutationFn: async (params: Omit<SecullumSyncParams, 'etapa'>) => {
+      setEtapasConcluidas([]);
+      setEtapaAtual(null);
+
+      const result = await syncSecullumCompleto(params, (etapa, status, stepResult) => {
+        if (status === 'iniciando') {
+          setEtapaAtual(etapa);
+          toast.info(`Sincronizando ${ETAPA_LABELS[etapa]}...`);
+        } else if (status === 'concluido') {
+          setEtapasConcluidas(prev => [...prev, etapa]);
+        } else if (status === 'erro') {
+          toast.error(`Erro em ${ETAPA_LABELS[etapa]}: ${stepResult?.error}`);
+        }
+      });
+
       if (!result.ok) {
         throw new Error(result.error || 'Erro na sincronização');
       }
       return result;
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
+      setEtapaAtual(null);
       queryClient.invalidateQueries({ queryKey: ['collaborators'] });
       queryClient.invalidateQueries({ queryKey: ['colaboradores-ativos'] });
       queryClient.invalidateQueries({ queryKey: ['secullum-calculos'] });
@@ -28,26 +53,15 @@ export function useSecullumSync() {
       queryClient.invalidateQueries({ queryKey: ['apontamento-dia'] });
       queryClient.invalidateQueries({ queryKey: ['apontamentos-pendentes'] });
       queryClient.invalidateQueries({ queryKey: ['secullum-sync-log'] });
-
-      const d = result.data;
-      const parts: string[] = [];
-      if (d?.funcionarios) parts.push(`${d.funcionarios.sincronizados} funcionários`);
-      if (d?.calculos) parts.push(`${d.calculos.sincronizados} cálculos`);
-      if (d?.afastamentos) parts.push(`${d.afastamentos.sincronizados} afastamentos`);
-      if (d?.fotos) parts.push(`${d.fotos.sincronizadas} fotos`);
-
-      toast.success(
-        parts.length > 0
-          ? `Sincronização concluída: ${parts.join(', ')}`
-          : result.message || 'Sincronização concluída',
-      );
+      toast.success('Sincronização completa concluída com sucesso');
     },
     onError: (error: Error) => {
+      setEtapaAtual(null);
       toast.error(`Erro na sincronização: ${error.message}`);
     },
   });
 
-  /** Último log de sync */
+  /** Historico de logs de sync */
   const { data: syncLogs = [], isLoading: isLoadingLogs } = useQuery({
     queryKey: ['secullum-sync-log'],
     queryFn: async () => {
@@ -68,6 +82,8 @@ export function useSecullumSync() {
     sync: syncMutation.mutate,
     syncAsync: syncMutation.mutateAsync,
     isSyncing: syncMutation.isPending,
+    etapaAtual,
+    etapasConcluidas,
     syncResult: syncMutation.data,
     syncError: syncMutation.error,
     syncLogs,

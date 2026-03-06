@@ -8,6 +8,9 @@ export type TipoAfastamento = 'FERIAS' | 'ATESTADO' | 'LICENCA' | 'OUTRO';
 /** Tipo de dia calculado pelo Secullum */
 export type TipoDia = 'NORMAL' | 'FERIAS' | 'FOLGA' | 'ATESTADO' | 'FERIADO' | 'SEM_MARCACAO';
 
+/** Etapa da sincronizacao */
+export type SecullumSyncEtapa = 'FUNCIONARIOS' | 'FOTOS' | 'AFASTAMENTOS' | 'CALCULOS';
+
 /** Resultado da invocacao da Edge Function */
 export interface SecullumSyncResult {
   ok: boolean;
@@ -30,10 +33,26 @@ export interface SecullumSyncResult {
 /** Parametros para sync */
 export interface SecullumSyncParams {
   tipo: 'CRON' | 'MANUAL';
+  etapa: SecullumSyncEtapa;
   dataInicio?: string;
   dataFim?: string;
   colaboradorIds?: string[];
 }
+
+/** Resultado agregado de todas as etapas */
+export interface SecullumFullSyncResult {
+  ok: boolean;
+  etapas: Partial<Record<SecullumSyncEtapa, SecullumSyncResult>>;
+  message?: string;
+  error?: string;
+}
+
+/** Callback para progresso por etapa */
+export type SyncProgressCallback = (
+  etapa: SecullumSyncEtapa,
+  status: 'iniciando' | 'concluido' | 'erro',
+  result?: SecullumSyncResult
+) => void;
 
 /** Registro de calculo (espelho de secullum_calculos) */
 export interface SecullumCalculo {
@@ -75,16 +94,19 @@ export interface SecullumAfastamento {
 export interface SecullumSyncLog {
   id: string;
   tipo: string;
+  etapa: string | null;
   status: string;
   data_inicio: string | null;
   data_fim: string | null;
   funcionarios_sincronizados: number;
   funcionarios_criados: number;
   funcionarios_atualizados: number;
+  funcionarios_ignorados: number;
   calculos_sincronizados: number;
   afastamentos_sincronizados: number;
   fotos_sincronizadas: number;
   apontamentos_criados: number;
+  apontamentos_atualizados: number;
   requests_utilizadas: number;
   erro_mensagem: string | null;
   duracao_ms: number | null;
