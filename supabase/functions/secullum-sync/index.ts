@@ -253,7 +253,6 @@ serve(async (req) => {
   // Supabase admin client (service role) para todas as operacoes de DB
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
   try {
@@ -263,20 +262,17 @@ serve(async (req) => {
       return jsonResponse({ ok: false, error: 'Nao autorizado' }, 401);
     }
 
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-
+    // Validar JWT do usuario usando auth.admin.getUser (método correto do SDK v2)
     const token = authHeader.replace('Bearer ', '');
-    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUser(token);
+    if (userError || !user) {
       return jsonResponse({ ok: false, error: 'Nao autorizado' }, 401);
     }
 
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
-    // Verificar roles: admin ou rh
-    const { data: roles } = await userClient
+    // Verificar roles: admin ou rh (usando service role client — sem RLS)
+    const { data: roles } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId);
