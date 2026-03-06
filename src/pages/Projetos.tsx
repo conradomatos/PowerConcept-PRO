@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -35,7 +38,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Plus, Search, Pencil, Trash2, FolderKanban, Pin, Clock, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Cloud, CloudOff } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Plus, Search, Pencil, Trash2, FolderKanban, Pin, Clock, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Cloud, CloudOff, FilterX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ProjetoForm from '@/components/ProjetoForm';
@@ -52,11 +60,13 @@ type ProjetoWithEmpresa = Projeto & {
 
 export default function Projetos() {
   const { hasRole } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterAprovacao, setFilterAprovacao] = useState<string>('all');
   const [filterTipoContrato, setFilterTipoContrato] = useState<string>('all');
+  const [ocultarSistema, setOcultarSistema] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedProjeto, setSelectedProjeto] = useState<ProjetoWithEmpresa | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -65,6 +75,15 @@ export default function Projetos() {
 
   const canEdit = hasRole('admin') || hasRole('rh');
   const canDelete = hasRole('admin');
+
+  const hasActiveFilters = search !== '' || filterStatus !== 'all' || filterAprovacao !== 'all' || filterTipoContrato !== 'all';
+
+  const clearFilters = () => {
+    setSearch('');
+    setFilterStatus('all');
+    setFilterAprovacao('all');
+    setFilterTipoContrato('all');
+  };
 
   const { data: projetos, isLoading } = useQuery({
     queryKey: ['projetos'],
@@ -92,8 +111,11 @@ export default function Projetos() {
   });
 
   const filteredProjetos = sortedProjetos?.filter((proj) => {
+    // Toggle ocultar projetos do sistema
+    if (ocultarSistema && proj.is_sistema) return false;
+
     const searchLower = search.toLowerCase();
-    const matchesSearch = 
+    const matchesSearch =
       proj.nome.toLowerCase().includes(searchLower) ||
       proj.empresas?.empresa.toLowerCase().includes(searchLower) ||
       proj.empresas?.codigo.toLowerCase().includes(searchLower) ||
@@ -171,7 +193,7 @@ export default function Projetos() {
   const getOmieSyncBadge = (projeto: ProjetoWithEmpresa) => {
     const status = projeto.omie_sync_status;
     const isTemp = projeto.os?.startsWith('TEMP-');
-    
+
     if (isTemp) {
       return (
         <span className="text-muted-foreground text-xs">-</span>
@@ -195,18 +217,33 @@ export default function Projetos() {
         );
       case 'ERROR':
         return (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Badge variant="outline" className="bg-destructive/20 text-destructive border-destructive/30 gap-1">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Badge variant="outline" className="bg-destructive/20 text-destructive border-destructive/30 gap-1 cursor-pointer">
                 <CloudOff className="h-3 w-3" />
                 Erro
               </Badge>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
-              <p className="text-destructive font-medium">Erro de sincronização</p>
-              <p className="text-xs">{projeto.omie_last_error || 'Erro desconhecido'}</p>
-            </TooltipContent>
-          </Tooltip>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" onClick={(e) => e.stopPropagation()}>
+              <div className="space-y-2">
+                <p className="text-destructive font-medium text-sm">Erro de sincronização</p>
+                <p className="text-xs text-muted-foreground">{projeto.omie_last_error || 'Erro desconhecido'}</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSyncToOmie(projeto);
+                  }}
+                  disabled={syncingProjectId === projeto.id}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 mr-2 ${syncingProjectId === projeto.id ? 'animate-spin' : ''}`} />
+                  Tentar novamente
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         );
       default:
         return (
@@ -261,7 +298,7 @@ export default function Projetos() {
   };
 
   const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return '-';
+    if (value === null || value === undefined || value === 0) return '–';
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
@@ -334,9 +371,27 @@ export default function Projetos() {
               <SelectItem value="MAO_DE_OBRA">Mão de Obra</SelectItem>
             </SelectContent>
           </Select>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              id="ocultar-sistema"
+              checked={ocultarSistema}
+              onCheckedChange={setOcultarSistema}
+            />
+            <Label htmlFor="ocultar-sistema" className="text-sm text-muted-foreground cursor-pointer">
+              Ocultar sistema
+            </Label>
+          </div>
+
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
+              <FilterX className="h-4 w-4" />
+              Limpar filtros
+            </Button>
+          )}
         </div>
 
-        <TooltipProvider>
+        <TooltipProvider delayDuration={300}>
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
@@ -348,7 +403,7 @@ export default function Projetos() {
                 <TableHead className="text-right">Valor (R$)</TableHead>
                 <TableHead>Início</TableHead>
                 <TableHead>Fim</TableHead>
-                <TableHead>Situação</TableHead>
+                <TableHead className="min-w-[130px]">Situação</TableHead>
                 <TableHead className="w-28">Omie</TableHead>
                 {(canEdit || canDelete) && <TableHead className="w-24">Ações</TableHead>}
               </TableRow>
@@ -356,19 +411,23 @@ export default function Projetos() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
               ) : filteredProjetos?.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                     Nenhum projeto encontrado
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredProjetos?.map((projeto) => (
-                  <TableRow key={projeto.id} className={projeto.is_sistema ? 'bg-primary/5' : ''}>
+                  <TableRow
+                    key={projeto.id}
+                    className={`cursor-pointer hover:bg-muted/50 ${projeto.is_sistema ? 'bg-primary/5' : ''}`}
+                    onClick={() => navigate(`/projetos/${projeto.id}`)}
+                  >
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {projeto.is_sistema && <Pin className="h-3 w-3 text-primary" />}
@@ -410,43 +469,66 @@ export default function Projetos() {
                       {projeto.data_fim_planejada ? new Date(projeto.data_fim_planejada).toLocaleDateString('pt-BR') : '-'}
                     </TableCell>
                     <TableCell>{getAprovacaoBadge(projeto.aprovacao_status)}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-1">
                         {getOmieSyncBadge(projeto)}
                         {canEdit && !projeto.is_sistema && !projeto.os?.startsWith('TEMP-') && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleSyncToOmie(projeto)}
-                            disabled={syncingProjectId === projeto.id}
-                            title="Sincronizar com Omie"
-                            className="h-7 w-7"
-                          >
-                            <RefreshCw className={`h-3.5 w-3.5 ${syncingProjectId === projeto.id ? 'animate-spin' : ''}`} />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSyncToOmie(projeto);
+                                }}
+                                disabled={syncingProjectId === projeto.id}
+                                className="h-7 w-7"
+                              >
+                                <RefreshCw className={`h-3.5 w-3.5 ${syncingProjectId === projeto.id ? 'animate-spin' : ''}`} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Sincronizar com Omie</TooltipContent>
+                          </Tooltip>
                         )}
                       </div>
                     </TableCell>
                     {(canEdit || canDelete) && (
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
                           {canEdit && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(projeto)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEdit(projeto);
+                                  }}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Editar projeto</TooltipContent>
+                            </Tooltip>
                           )}
                           {canDelete && !projeto.is_sistema && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => confirmDelete(projeto)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    confirmDelete(projeto);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Excluir projeto</TooltipContent>
+                            </Tooltip>
                           )}
                         </div>
                       </TableCell>
